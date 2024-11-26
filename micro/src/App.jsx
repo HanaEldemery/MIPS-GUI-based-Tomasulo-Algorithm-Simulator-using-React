@@ -55,7 +55,7 @@ const issueQuestion = (
       check = "int-add";
       break;
     case "SUBI":
-      check = "int-sub";
+      check = "int-add";
       break;
     case "LW":
       check = "int-load-word";
@@ -82,8 +82,10 @@ const issueQuestion = (
       if (mulBuffer.some((record) => record.busy === 0)) {
         const index = mulBuffer.findIndex((record) => record.busy === 0);
 
-        const registerOne = SplitData(fileContent[LINE_TXT])[2];
-        const registerTwo = SplitData(fileContent[LINE_TXT])[3];
+        const splitData = SplitData(fileContent[LINE_TXT]);
+
+        const registerOne = splitData[2];
+        const registerTwo = splitData[3];
 
         const qOfRegisterOne = registerFile.find(
           (register) => register.register === `${registerOne}`
@@ -134,7 +136,7 @@ const issueQuestion = (
           );
 
           //edit register file (done)
-          const registerOutput = SplitData(fileContent[LINE_TXT])[1];
+          const registerOutput = splitData[1];
           const indexRegisterInRegisterFile = registerFile.findIndex(
             (register) => register.register === registerOutput
           );
@@ -150,7 +152,100 @@ const issueQuestion = (
         console.log("NOT DONE YET HEREEEE!");
         //if no space RETURN (stall) (NOT DONE YET)
       }
+      break;
+    case "add-buffer":
+      //check if fthere's empty space in the add buffer (done)
+      //0 in the busy (done)
+      //if yes issue (done)
+      if (addBuffer.some((record) => record.busy === 0)) {
+        const index = addBuffer.findIndex((record) => record.busy === 0);
 
+        const splitData = SplitData(fileContent[LINE_TXT]);
+
+        const registerOne = splitData[2];
+        const registerTwo = splitData[3];
+
+        const qOfRegisterOne = registerFile.find(
+          (register) => register.register === `${registerOne}`
+        )?.qi;
+        const qOfRegisterTwo = registerFile.find(
+          (register) => register.register === `${registerTwo}`
+        )?.qi;
+
+        let vj, vk, qj, qk;
+        if (qOfRegisterOne === "0") {
+          vj = registerOne;
+          qj = 0;
+        } else {
+          vj = 0;
+          qj = qOfRegisterOne;
+        }
+        if (qOfRegisterTwo === "0") {
+          vk = registerTwo;
+          qk = 0;
+        } else {
+          vk = 0;
+          qk = qOfRegisterTwo;
+        }
+
+        if (index !== -1) {
+          //write in the add buffer (done)
+          addBuffer[index] = {
+            ...addBuffer[index],
+            op: instructionType,
+            vj: vj,
+            vk: vk,
+            qj: qj,
+            qk: qk,
+            busy: 1,
+          };
+
+          //write in summary and write issue with clk (done)
+          SUMMARY.push(
+            new Summary(
+              GLOBAL_ITERATION,
+              fileContent[LINE_TXT],
+              registerOne,
+              registerTwo,
+              GLOBAL_CLK,
+              "",
+              -1
+            )
+          );
+
+          //edit register file (done)
+          const registerOutput = splitData[1];
+          const indexRegisterInRegisterFile = registerFile.findIndex(
+            (register) => register.register === registerOutput
+          );
+
+          if (indexRegisterInRegisterFile !== -1)
+            registerFile[indexRegisterInRegisterFile].qi = `A${index + 1}`;
+
+          console.log(`addBuffer: ${JSON.stringify(addBuffer)}`);
+          console.log(`SUMMARY: ${JSON.stringify(SUMMARY)}`);
+          console.log(`registerFile: ${JSON.stringify(registerFile)}`);
+        }
+      } else {
+        console.log("NOT DONE YET HEREEEE!");
+        //if no space RETURN (stall) (NOT DONE YET)
+      }
+      break;
+    case "load-buffer":
+      break;
+    case "store-buffer":
+      break;
+    case "int-add":
+      break;
+    case "int-load-word":
+      break;
+    case "int-load-double":
+      break;
+    case "int-store-word":
+      break;
+    case "int-store-double":
+      break;
+    case "int-branch":
       break;
   }
 
