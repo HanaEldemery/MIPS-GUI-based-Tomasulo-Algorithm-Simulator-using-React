@@ -29,7 +29,9 @@ const App = () => {
 
   const [isChildStateUpdated, setIsChildStateUpdated] = useState(false);
   const [stalledBuffer, setStalledBuffer] = useState("");
-  const [changedBuffers, setChangedBuffers] = useState("");
+  const [changedBuffers, setChangedBuffers] = useState([]);
+  const [areWritebackValuesUpdated, setAreWritebackValuesUpdated] =
+    useState(false);
 
   const handleChildStateUpdate = () => {
     setIsChildStateUpdated(true);
@@ -132,20 +134,52 @@ const App = () => {
         addBuffer,
         storeBuffer,
         summary,
-        stalledBuffer,
-        changedBuffers,
         setRegisterFile,
         setMulBuffer,
         setAddBuffer,
         setStoreBuffer,
         setSummary,
-        setStalledBuffer,
         setChangedBuffers
       );
 
       setIsChildStateUpdated(false);
+      setAreWritebackValuesUpdated(true);
     }
   }, [isChildStateUpdated, GLOBAL_CLK]);
+
+  useEffect(() => {
+    if (
+      fileContent?.length > 0 &&
+      LINE_TXT < fileContent?.length &&
+      areWritebackValuesUpdated &&
+      changedBuffers.includes(stalledBuffer)
+    ) {
+      setStalledBuffer("");
+      setChangedBuffers([]);
+      IssueQuestion(
+        fileContent,
+        LINE_TXT,
+        GLOBAL_CLK,
+        GLOBAL_ITERATION,
+        registerFile,
+        mulBuffer,
+        addBuffer,
+        loadBuffer,
+        storeBuffer,
+        summary,
+        setMulBuffer,
+        setAddBuffer,
+        setLoadBuffer,
+        setStoreBuffer,
+        SET_LINE_TXT,
+        setSummary,
+        setRegisterFile,
+        setStalledBuffer
+      );
+
+      setAreWritebackValuesUpdated(false);
+    }
+  }, [changedBuffers]);
 
   const handleOnNextClockCycleClick = () => {
     SET_GLOBAL_CLK((prev) => prev + 1);

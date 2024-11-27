@@ -141,14 +141,14 @@ const IssueQuestion = (
             newRegisterFile[indexRegisterInRegisterFile].qi = `M${index + 1}`;
           setRegisterFile(newRegisterFile);
 
-          console.log(`mulBuffer: ${JSON.stringify(newMulBuffer)}`);
-          console.log(`SUMMARY: ${JSON.stringify(newSummary)}`);
-          console.log(`registerFile: ${JSON.stringify(newRegisterFile)}`);
+          // console.log(`mulBuffer: ${JSON.stringify(newMulBuffer)}`);
+          // console.log(`SUMMARY: ${JSON.stringify(newSummary)}`);
+          // console.log(`registerFile: ${JSON.stringify(newRegisterFile)}`);
         }
       } else {
         SET_LINE_TXT((prev) => prev - 1);
         setStalledBuffer("mulBuffer");
-        console.log("CHECK IF STALL WORKS");
+        // console.log("CHECK IF STALL WORKS");
         //if no space RETURN (stall) (NOT DONE YET)
       }
       break;
@@ -237,7 +237,7 @@ const IssueQuestion = (
       } else {
         SET_LINE_TXT((prev) => prev - 1);
         setStalledBuffer("addBuffer");
-        console.log("CHECK IF STALL WORKS");
+        // console.log("CHECK IF STALL WORKS");
         //if no space RETURN (stall) (NOT DONE YET)
       }
       break;

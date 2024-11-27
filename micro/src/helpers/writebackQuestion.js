@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import OperationBuffer from "../buffers/operationBuffer";
 
@@ -74,24 +74,19 @@ const WritebackQuestion = (
   addBuffer,
   storeBuffer,
   summary,
-  stalledBuffer,
-  changedBuffers,
   setRegisterFile,
   setMulBuffer,
   setAddBuffer,
   setStoreBuffer,
   setSummary,
-  setStalledBuffer,
   setChangedBuffers
 ) => {
-  const updateBufferState = (bufferName) => {
-    setChangedBuffers((prev) => {
-      // Add bufferName to state array if not already present
-      if (!prev.includes(bufferName)) {
-        return [...prev, bufferName];
-      }
-      return prev; // Don't add if already exists
-    });
+  const updateChangedBuffers = (bufferName) => {
+    setChangedBuffers((prevChangedBuffers) =>
+      prevChangedBuffers.includes(bufferName)
+        ? prevChangedBuffers
+        : [...prevChangedBuffers, bufferName]
+    );
   };
   //arrayOfInstructionTags ==> loop on (summary) and check for each record if anything after ... && writeBack === -1)
   //-----------//
@@ -175,8 +170,8 @@ const WritebackQuestion = (
         });
 
         if (JSON.stringify(prevBuffer) !== JSON.stringify(updatedBuffer)) {
-          console.log("here");
-          updateBufferState("mulBuffer");
+          //console.log("here");
+          updateChangedBuffers("mulBuffer");
         }
 
         return updatedBuffer;
@@ -191,7 +186,7 @@ const WritebackQuestion = (
         });
 
         if (JSON.stringify(prevBuffer) !== JSON.stringify(updatedBuffer)) {
-          updateBufferState("addBuffer");
+          updateChangedBuffers("addBuffer");
         }
 
         return updatedBuffer;
@@ -204,7 +199,7 @@ const WritebackQuestion = (
         });
 
         if (JSON.stringify(prevBuffer) !== JSON.stringify(updatedBuffer)) {
-          updateBufferState("storeBuffer");
+          updateChangedBuffers("storeBuffer");
         }
 
         return updatedBuffer;
@@ -228,13 +223,7 @@ const WritebackQuestion = (
         })
       );
 
-      if (stalledBuffer && changedBuffers.includes(stalledBuffer)) {
-        console.log(
-          "handle here issuing again when space freeed, IN SAME CLK cycle"
-        );
-        //the changedBuffers only contains the right data a cycle later, fix
-      }
-
+      break;
     case "A":
       // console.log(
       //   `addBuffer in WritebackComponent: ${JSON.stringify(addBuffer)}`
