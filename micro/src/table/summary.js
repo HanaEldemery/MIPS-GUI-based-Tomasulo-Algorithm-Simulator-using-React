@@ -5,15 +5,17 @@ export default class Summary {
     j = "",
     k = "",
     issue = -1,
-    excutionComplete = "",
-    writeBack = -1
+    executionComplete = "",
+    writeBack = -1,
+    location = ""
   ) {
     this.iteration = iteration;
     this.instruction = instruction;
     this.j = j;
     this.k = k;
     this.issue = issue;
-    this.excutionComplete = excutionComplete;
+    this.executionComplete = executionComplete;
     this.writeBack = writeBack;
+    this.location = location;
   }
 }

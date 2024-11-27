@@ -7,5 +7,7 @@ export default class OperationBuffer {
     this.qj = "";
     this.qk = "";
     this.a = "";
+    this.indexInRegisterFile = -1;
+    this.indexInSummary = -1;
   }
 }

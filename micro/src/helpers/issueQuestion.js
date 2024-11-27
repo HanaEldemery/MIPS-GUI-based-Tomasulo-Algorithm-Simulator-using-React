@@ -83,16 +83,16 @@ const IssueQuestion = (
         let vj, vk, qj, qk;
         if (qOfRegisterOne === "0") {
           vj = registerOne;
-          qj = 0;
+          qj = "";
         } else {
-          vj = 0;
+          vj = "";
           qj = qOfRegisterOne;
         }
         if (qOfRegisterTwo === "0") {
           vk = registerTwo;
-          qk = 0;
+          qk = "";
         } else {
-          vk = 0;
+          vk = "";
           qk = qOfRegisterTwo;
         }
 
@@ -107,6 +107,8 @@ const IssueQuestion = (
             qj: qj,
             qk: qk,
             busy: 1,
+            indexInRegisterFile: parseInt(splitData[1].slice(1)),
+            indexInSummary: summary.length,
           };
           setMulBuffer(newMulBuffer);
 
@@ -120,7 +122,8 @@ const IssueQuestion = (
               registerTwo,
               GLOBAL_CLK,
               "",
-              -1
+              -1,
+              `M${index + 1}`
             ),
           ];
           setSummary(newSummary);
@@ -167,16 +170,16 @@ const IssueQuestion = (
         let vj, vk, qj, qk;
         if (qOfRegisterOne === "0") {
           vj = registerOne;
-          qj = 0;
+          qj = "";
         } else {
-          vj = 0;
+          vj = "";
           qj = qOfRegisterOne;
         }
         if (qOfRegisterTwo === "0") {
           vk = registerTwo;
-          qk = 0;
+          qk = "";
         } else {
-          vk = 0;
+          vk = "";
           qk = qOfRegisterTwo;
         }
 
@@ -191,6 +194,8 @@ const IssueQuestion = (
             qj: qj,
             qk: qk,
             busy: 1,
+            indexInRegisterFile: parseInt(splitData[1].slice(1)),
+            indexInSummary: summary.length,
           };
           setAddBuffer(newAddBuffer);
 
@@ -204,7 +209,8 @@ const IssueQuestion = (
               registerTwo,
               GLOBAL_CLK,
               "",
-              -1
+              -1,
+              `A${index + 1}`
             ),
           ];
           setSummary(newSummary);

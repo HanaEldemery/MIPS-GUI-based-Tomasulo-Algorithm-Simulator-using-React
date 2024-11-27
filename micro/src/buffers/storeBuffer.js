@@ -4,5 +4,6 @@ export default class StoreBuffer {
     this.address = -1;
     this.v = "";
     this.q = "";
+    this.indexInSummary = -1;
   }
 }
