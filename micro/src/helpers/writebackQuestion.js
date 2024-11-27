@@ -69,29 +69,20 @@ const instructionToWriteBack = (
 };
 
 const WritebackQuestion = (
-  fileContent,
-  LINE_TXT,
   GLOBAL_CLK,
-  GLOBAL_ITERATION,
-  registerFile,
   mulBuffer,
   addBuffer,
-  loadBuffer,
   storeBuffer,
   summary,
   stalledBuffer,
   changedBuffers,
-  updateInsideWriteback,
   setRegisterFile,
   setMulBuffer,
   setAddBuffer,
-  setLoadBuffer,
   setStoreBuffer,
-  SET_LINE_TXT,
   setSummary,
   setStalledBuffer,
-  setChangedBuffers,
-  setUpdateInsideWriteback
+  setChangedBuffers
 ) => {
   const updateBufferState = (bufferName) => {
     setChangedBuffers((prev) => {

@@ -30,7 +30,6 @@ const App = () => {
   const [isChildStateUpdated, setIsChildStateUpdated] = useState(false);
   const [stalledBuffer, setStalledBuffer] = useState("");
   const [changedBuffers, setChangedBuffers] = useState("");
-  const [updateInsideWriteback, setUpdateInsideWriteback] = useState(false);
 
   const handleChildStateUpdate = () => {
     setIsChildStateUpdated(true);
@@ -128,29 +127,20 @@ const App = () => {
   useEffect(() => {
     if (isChildStateUpdated) {
       WritebackQuestion(
-        fileContent,
-        LINE_TXT,
         GLOBAL_CLK,
-        GLOBAL_ITERATION,
-        registerFile,
         mulBuffer,
         addBuffer,
-        loadBuffer,
         storeBuffer,
         summary,
         stalledBuffer,
         changedBuffers,
-        updateInsideWriteback,
         setRegisterFile,
         setMulBuffer,
         setAddBuffer,
-        setLoadBuffer,
         setStoreBuffer,
-        SET_LINE_TXT,
         setSummary,
         setStalledBuffer,
-        setChangedBuffers,
-        setUpdateInsideWriteback
+        setChangedBuffers
       );
 
       setIsChildStateUpdated(false);
