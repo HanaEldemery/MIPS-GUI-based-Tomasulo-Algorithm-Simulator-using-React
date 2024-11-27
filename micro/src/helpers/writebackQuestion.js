@@ -79,7 +79,8 @@ const WritebackQuestion = (
   setAddBuffer,
   setStoreBuffer,
   setSummary,
-  setChangedBuffers
+  setChangedBuffers,
+  SET_LINE_TXT
 ) => {
   const updateChangedBuffers = (bufferName) => {
     setChangedBuffers((prevChangedBuffers) =>
