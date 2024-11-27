@@ -296,9 +296,10 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    if (fileContent.length > 0) {
+    if (fileContent?.length > 0 && LINE_TXT < fileContent?.length)
       issueQuestion();
-    }
+    //add if to execute
+    //add if to writeback
   }, [GLOBAL_CLK]);
 
   const handleOnNextClockCycleClick = () => {
