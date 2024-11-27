@@ -16,8 +16,10 @@ const IssueQuestion = (
   setAddBuffer,
   setLoadBuffer,
   setStoreBuffer,
+  SET_LINE_TXT,
   setSummary,
-  setRegisterFile
+  setRegisterFile,
+  setStalledBuffer
 ) => {
   const instructionType = SplitData(fileContent[LINE_TXT])[0];
 
@@ -144,7 +146,9 @@ const IssueQuestion = (
           console.log(`registerFile: ${JSON.stringify(newRegisterFile)}`);
         }
       } else {
-        console.log("NOT DONE YET HEREEEE!");
+        SET_LINE_TXT((prev) => prev - 1);
+        setStalledBuffer("mulBuffer");
+        console.log("CHECK IF STALL WORKS");
         //if no space RETURN (stall) (NOT DONE YET)
       }
       break;
@@ -231,7 +235,9 @@ const IssueQuestion = (
           console.log(`registerFile: ${JSON.stringify(newRegisterFile)}`);
         }
       } else {
-        console.log("NOT DONE YET HEREEEE!");
+        SET_LINE_TXT((prev) => prev - 1);
+        setStalledBuffer("addBuffer");
+        console.log("CHECK IF STALL WORKS");
         //if no space RETURN (stall) (NOT DONE YET)
       }
       break;

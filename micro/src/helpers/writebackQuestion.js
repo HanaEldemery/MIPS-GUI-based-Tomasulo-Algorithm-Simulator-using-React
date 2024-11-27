@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
+
 import OperationBuffer from "../buffers/operationBuffer";
 
-//Qi to 0 in register file
+import IssueQuestion from "./issueQuestion";
 
 const instructionToWriteBack = (
   arrayOfInstructionTags,
@@ -67,17 +69,39 @@ const instructionToWriteBack = (
 };
 
 const WritebackQuestion = (
+  fileContent,
+  LINE_TXT,
   GLOBAL_CLK,
+  GLOBAL_ITERATION,
+  registerFile,
   mulBuffer,
   addBuffer,
+  loadBuffer,
   storeBuffer,
   summary,
+  stalledBuffer,
+  changedBuffers,
+  updateInsideWriteback,
   setRegisterFile,
   setMulBuffer,
   setAddBuffer,
+  setLoadBuffer,
   setStoreBuffer,
-  setSummary
+  SET_LINE_TXT,
+  setSummary,
+  setStalledBuffer,
+  setChangedBuffers,
+  setUpdateInsideWriteback
 ) => {
+  const updateBufferState = (bufferName) => {
+    setChangedBuffers((prev) => {
+      // Add bufferName to state array if not already present
+      if (!prev.includes(bufferName)) {
+        return [...prev, bufferName];
+      }
+      return prev; // Don't add if already exists
+    });
+  };
   //arrayOfInstructionTags ==> loop on (summary) and check for each record if anything after ... && writeBack === -1)
   //-----------//
   //if true ==> add the summary.location to the arrayOfInstructionTags
@@ -138,10 +162,10 @@ const WritebackQuestion = (
   let newValue;
   switch (tagLetter) {
     case "M":
-      console.log(
-        `mulBuffer in WritebackComponent: ${JSON.stringify(mulBuffer)}`
-      );
-      console.log(`SUMMARY in WritebackComponent: ${JSON.stringify(summary)}`);
+      // console.log(
+      //   `mulBuffer in WritebackComponent: ${JSON.stringify(mulBuffer)}`
+      // );
+      // console.log(`SUMMARY in WritebackComponent: ${JSON.stringify(summary)}`);
 
       const indexInBuffer = parseInt(instructionTag?.tag.slice(1)) - 1;
       const operation = mulBuffer[indexInBuffer]?.op === "MUL.D" ? "*" : "/";
@@ -150,7 +174,7 @@ const WritebackQuestion = (
       newValue = `${mulBuffer[indexInBuffer]?.vj}${operation}${mulBuffer[indexInBuffer]?.vk}`;
 
       setMulBuffer((prevBuffer) => {
-        return prevBuffer.map((record, index) => {
+        const updatedBuffer = prevBuffer.map((record, index) => {
           if (record?.qj === instructionTag?.tag)
             return { ...record, vj: newValue, qj: "" };
           if (record?.qk === instructionTag?.tag)
@@ -158,23 +182,42 @@ const WritebackQuestion = (
           if (index === indexInBuffer) return new OperationBuffer();
           return record;
         });
+
+        if (JSON.stringify(prevBuffer) !== JSON.stringify(updatedBuffer)) {
+          console.log("here");
+          updateBufferState("mulBuffer");
+        }
+
+        return updatedBuffer;
       });
-      setAddBuffer((prevBuffer) =>
-        prevBuffer.map((record) => {
+      setAddBuffer((prevBuffer) => {
+        const updatedBuffer = prevBuffer.map((record) => {
           if (record?.qj === instructionTag?.tag)
             return { ...record, vj: newValue, qj: "" };
           if (record?.qk === instructionTag?.tag)
             return { ...record, vk: newValue, qk: "" };
           return record;
-        })
-      );
-      setStoreBuffer((prevBuffer) =>
-        prevBuffer.map((record) => {
-          record?.q === instructionTag?.tag
+        });
+
+        if (JSON.stringify(prevBuffer) !== JSON.stringify(updatedBuffer)) {
+          updateBufferState("addBuffer");
+        }
+
+        return updatedBuffer;
+      });
+      setStoreBuffer((prevBuffer) => {
+        const updatedBuffer = prevBuffer.map((record) => {
+          return record?.q === instructionTag?.tag
             ? { ...record, v: newValue, q: "" }
             : record;
-        })
-      );
+        });
+
+        if (JSON.stringify(prevBuffer) !== JSON.stringify(updatedBuffer)) {
+          updateBufferState("storeBuffer");
+        }
+
+        return updatedBuffer;
+      });
       setRegisterFile((prevRegisterFile) =>
         prevRegisterFile.map((record, index) => {
           if (index === indexInRegisterFile) {
@@ -193,12 +236,19 @@ const WritebackQuestion = (
           return record;
         })
       );
-      break;
+
+      if (stalledBuffer && changedBuffers.includes(stalledBuffer)) {
+        console.log(
+          "handle here issuing again when space freeed, IN SAME CLK cycle"
+        );
+        //the changedBuffers only contains the right data a cycle later, fix
+      }
+
     case "A":
-      console.log(
-        `addBuffer in WritebackComponent: ${JSON.stringify(addBuffer)}`
-      );
-      console.log(`SUMMARY in WritebackComponent: ${JSON.stringify(summary)}`);
+      // console.log(
+      //   `addBuffer in WritebackComponent: ${JSON.stringify(addBuffer)}`
+      // );
+      // console.log(`SUMMARY in WritebackComponent: ${JSON.stringify(summary)}`);
       break;
     case "L":
       const type = tagLetter[2];

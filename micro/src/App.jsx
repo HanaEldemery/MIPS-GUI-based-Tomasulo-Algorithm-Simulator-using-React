@@ -28,6 +28,9 @@ const App = () => {
   const [summary, setSummary] = useState([]);
 
   const [isChildStateUpdated, setIsChildStateUpdated] = useState(false);
+  const [stalledBuffer, setStalledBuffer] = useState("");
+  const [changedBuffers, setChangedBuffers] = useState("");
+  const [updateInsideWriteback, setUpdateInsideWriteback] = useState(false);
 
   const handleChildStateUpdate = () => {
     setIsChildStateUpdated(true);
@@ -90,13 +93,17 @@ const App = () => {
         setAddBuffer,
         setLoadBuffer,
         setStoreBuffer,
+        SET_LINE_TXT,
         setSummary,
-        setRegisterFile
+        setRegisterFile,
+        setStalledBuffer
       );
 
       handleChildStateUpdate();
-    } else if (GLOBAL_CLK === 4) {
-      //console.log("here");
+    } else if (GLOBAL_CLK !== 0) setIsChildStateUpdated(true);
+
+    if (GLOBAL_CLK === 4) {
+      // test //
       setSummary((prevSummary) =>
         prevSummary.map((record, index) => {
           if (index === 0) return { ...record, executionComplete: "2...4" };
@@ -104,29 +111,46 @@ const App = () => {
         })
       );
       setIsChildStateUpdated(true);
+      //      //
     } else if (GLOBAL_CLK === 6) {
+      // test //
       setSummary((prevSummary) =>
         prevSummary.map((record, index) => {
           if (index === 1) return { ...record, executionComplete: "6...7" };
           return record;
         })
       );
-    } else if (GLOBAL_CLK !== 0) setIsChildStateUpdated(true);
+      setIsChildStateUpdated(true);
+      //      //
+    }
   }, [GLOBAL_CLK]);
 
   useEffect(() => {
     if (isChildStateUpdated) {
       WritebackQuestion(
+        fileContent,
+        LINE_TXT,
         GLOBAL_CLK,
+        GLOBAL_ITERATION,
+        registerFile,
         mulBuffer,
         addBuffer,
+        loadBuffer,
         storeBuffer,
         summary,
+        stalledBuffer,
+        changedBuffers,
+        updateInsideWriteback,
         setRegisterFile,
         setMulBuffer,
         setAddBuffer,
+        setLoadBuffer,
         setStoreBuffer,
-        setSummary
+        SET_LINE_TXT,
+        setSummary,
+        setStalledBuffer,
+        setChangedBuffers,
+        setUpdateInsideWriteback
       );
 
       setIsChildStateUpdated(false);
@@ -139,9 +163,10 @@ const App = () => {
   };
 
   // console.log(
-  //   "MUL BUFFER PARENT==============================================="
+  //   "================================================================"
   // );
   // console.log(mulBuffer);
+  // console.log(LINE_TXT);
   // console.log(
   //   "================================================================"
   // );
