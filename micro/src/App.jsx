@@ -28,10 +28,7 @@ const App = () => {
   const [summary, setSummary] = useState([]);
 
   const [isChildStateUpdated, setIsChildStateUpdated] = useState(false);
-  const [stalledBuffer, setStalledBuffer] = useState("");
-  const [changedBuffers, setChangedBuffers] = useState([]);
-  const [areWritebackValuesUpdated, setAreWritebackValuesUpdated] =
-    useState(false);
+  const [isDone, setIsDone] = useState(false);
 
   const handleChildStateUpdate = () => {
     setIsChildStateUpdated(true);
@@ -40,8 +37,6 @@ const App = () => {
   const startQuestion = () => {};
 
   const endQuestion = () => {};
-
-  const writebackQuestion = () => {};
 
   useEffect(() => {
     //user input (sizes)
@@ -52,7 +47,7 @@ const App = () => {
     setMulBuffer(initialMulBuffer);
 
     const initialAddBuffer = [];
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       initialAddBuffer.push(new OperationBuffer());
     }
     setAddBuffer(initialAddBuffer);
@@ -70,7 +65,7 @@ const App = () => {
     setStoreBuffer(initialStoreBuffer);
 
     const initialRegisterFile = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 12; i++) {
       let register = `F${i}`;
       initialRegisterFile.push(new RegisterFile(register, `${i}`, "0"));
     }
@@ -96,34 +91,63 @@ const App = () => {
         setStoreBuffer,
         SET_LINE_TXT,
         setSummary,
-        setRegisterFile,
-        setStalledBuffer
+        setRegisterFile
       );
 
       handleChildStateUpdate();
     } else if (GLOBAL_CLK !== 0) setIsChildStateUpdated(true);
 
-    if (GLOBAL_CLK === 4) {
-      // test //
+    // test //
+    if (GLOBAL_CLK === 2) {
       setSummary((prevSummary) =>
         prevSummary.map((record, index) => {
-          if (index === 0) return { ...record, executionComplete: "2...4" };
+          if (index === 0) return { ...record, executionComplete: "2...7" };
           return record;
         })
       );
       setIsChildStateUpdated(true);
-      //      //
-    } else if (GLOBAL_CLK === 6) {
-      // test //
+    } else if (GLOBAL_CLK === 4) {
       setSummary((prevSummary) =>
         prevSummary.map((record, index) => {
-          if (index === 1) return { ...record, executionComplete: "6...7" };
+          if (index === 2) return { ...record, executionComplete: "4...7" };
           return record;
         })
       );
       setIsChildStateUpdated(true);
-      //      //
+    } else if (GLOBAL_CLK === 5) {
+      setSummary((prevSummary) =>
+        prevSummary.map((record, index) => {
+          if (index === 3) return { ...record, executionComplete: "5...8" };
+          return record;
+        })
+      );
+      setIsChildStateUpdated(true);
+    } else if (GLOBAL_CLK === 9) {
+      setSummary((prevSummary) =>
+        prevSummary.map((record, index) => {
+          if (index === 1) return { ...record, executionComplete: "9...12" };
+          return record;
+        })
+      );
+      setIsChildStateUpdated(true);
+    } else if (GLOBAL_CLK === 11) {
+      setSummary((prevSummary) =>
+        prevSummary.map((record, index) => {
+          if (index === 4) return { ...record, executionComplete: "11...16" };
+          return record;
+        })
+      );
+      setIsChildStateUpdated(true);
+    } else if (GLOBAL_CLK === 18) {
+      setSummary((prevSummary) =>
+        prevSummary.map((record, index) => {
+          if (index === 5) return { ...record, executionComplete: "18...21" };
+          return record;
+        })
+      );
+      setIsChildStateUpdated(true);
     }
+    //      //
   }, [GLOBAL_CLK]);
 
   useEffect(() => {
@@ -138,57 +162,29 @@ const App = () => {
         setMulBuffer,
         setAddBuffer,
         setStoreBuffer,
-        setSummary,
-        setChangedBuffers,
-        SET_LINE_TXT
+        setSummary
       );
 
       setIsChildStateUpdated(false);
-      setAreWritebackValuesUpdated(true);
     }
   }, [isChildStateUpdated, GLOBAL_CLK]);
 
-  useEffect(() => {
+  const checkIfDone = () => {
+    const summaryFilteredByWriteback = summary.filter(
+      (record) => record.writeBack !== -1
+    );
     if (
-      fileContent?.length > 0 &&
-      LINE_TXT + 1 < fileContent?.length &&
-      areWritebackValuesUpdated &&
-      changedBuffers.includes(stalledBuffer)
+      summaryFilteredByWriteback.length === summary.length &&
+      GLOBAL_CLK !== 0
     ) {
-      console.log(stalledBuffer);
-      console.log(changedBuffers);
-
-      SET_LINE_TXT(LINE_TXT + 1);
-
-      IssueQuestion(
-        fileContent,
-        LINE_TXT + 1,
-        GLOBAL_CLK,
-        GLOBAL_ITERATION,
-        registerFile,
-        mulBuffer,
-        addBuffer,
-        loadBuffer,
-        storeBuffer,
-        summary,
-        setMulBuffer,
-        setAddBuffer,
-        setLoadBuffer,
-        setStoreBuffer,
-        SET_LINE_TXT,
-        setSummary,
-        setRegisterFile,
-        setStalledBuffer
-      );
-
-      setStalledBuffer("");
-      setChangedBuffers([]);
-      setAreWritebackValuesUpdated(false);
+      setIsDone(true);
+      SET_GLOBAL_CLK((prev) => prev - 1);
     }
-  }, [changedBuffers, LINE_TXT]);
+  };
 
   const handleOnNextClockCycleClick = () => {
     SET_GLOBAL_CLK((prev) => prev + 1);
+    checkIfDone();
     if (fileContent?.length > LINE_TXT) SET_LINE_TXT((prev) => prev + 1); //check
   };
 
@@ -248,6 +244,17 @@ const App = () => {
       >
         Next Clockcycle
       </button>
+
+      {isDone && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 shadow-lg w-96 text-center">
+            <h2 className="text-2xl font-bold text-green-600">Done!</h2>
+            <p className="text-gray-700 my-4">
+              All operations have been completed successfully.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

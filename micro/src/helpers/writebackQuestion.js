@@ -68,6 +68,44 @@ const instructionToWriteBack = (
   );
 };
 
+const updateOperationBuffer = (
+  buffer,
+  instructionTag,
+  newValue,
+  operationIndex = null
+) =>
+  buffer.map((record, index) => {
+    if (record?.qj === instructionTag?.tag)
+      return { ...record, vj: newValue, qj: "" };
+    if (record?.qk === instructionTag?.tag)
+      return { ...record, vk: newValue, qk: "" };
+    if (operationIndex !== null && index === operationIndex)
+      return new OperationBuffer();
+    return record;
+  });
+
+const updateRegisterFile = (
+  registerFile,
+  instructionTag,
+  newValue,
+  indexInRegisterFile
+) =>
+  registerFile.map((record, index) => {
+    if (index === indexInRegisterFile) {
+      if (record?.qi === instructionTag?.tag)
+        return { ...record, value: newValue, qi: "0" };
+      return { ...record, value: newValue };
+    }
+    return record;
+  });
+
+const updateSummary = (summary, indexInSummary, GLOBAL_CLK) =>
+  summary.map((record, index) => {
+    if (index === indexInSummary)
+      return { ...record, writeBack: GLOBAL_CLK, location: "" };
+    return record;
+  });
+
 const WritebackQuestion = (
   GLOBAL_CLK,
   mulBuffer,
@@ -78,17 +116,8 @@ const WritebackQuestion = (
   setMulBuffer,
   setAddBuffer,
   setStoreBuffer,
-  setSummary,
-  setChangedBuffers,
-  SET_LINE_TXT
+  setSummary
 ) => {
-  const updateChangedBuffers = (bufferName) => {
-    setChangedBuffers((prevChangedBuffers) =>
-      prevChangedBuffers.includes(bufferName)
-        ? prevChangedBuffers
-        : [...prevChangedBuffers, bufferName]
-    );
-  };
   //arrayOfInstructionTags ==> loop on (summary) and check for each record if anything after ... && writeBack === -1)
   //-----------//
   //if true ==> add the summary.location to the arrayOfInstructionTags
@@ -149,89 +178,64 @@ const WritebackQuestion = (
   let newValue;
   switch (tagLetter) {
     case "M":
-      // console.log(
-      //   `mulBuffer in WritebackComponent: ${JSON.stringify(mulBuffer)}`
-      // );
-      // console.log(`SUMMARY in WritebackComponent: ${JSON.stringify(summary)}`);
-
+    case "A": {
+      const buffer = tagLetter === "M" ? mulBuffer : addBuffer;
       const indexInBuffer = parseInt(instructionTag?.tag.slice(1)) - 1;
-      const operation = mulBuffer[indexInBuffer]?.op === "MUL.D" ? "*" : "/";
-      const indexInRegisterFile = mulBuffer[indexInBuffer]?.indexInRegisterFile;
-      const indexInSummary = mulBuffer[indexInBuffer]?.indexInSummary;
-      newValue = `${mulBuffer[indexInBuffer]?.vj}${operation}${mulBuffer[indexInBuffer]?.vk}`;
+      const indexInRegisterFile = buffer[indexInBuffer]?.indexInRegisterFile;
+      const indexInSummary = buffer[indexInBuffer]?.indexInSummary;
+      const operationString =
+        summary[indexInSummary]?.instruction.split(" ")[0];
+      const operation =
+        operationString === "MUL.D"
+          ? "*"
+          : operationString === "DIV.D"
+          ? "/"
+          : operationString === "ADD.D"
+          ? "+"
+          : "-";
+      newValue = `${buffer[indexInBuffer]?.vj}${operation}${buffer[indexInBuffer]?.vk}`;
 
-      setMulBuffer((prevBuffer) => {
-        const updatedBuffer = prevBuffer.map((record, index) => {
-          if (record?.qj === instructionTag?.tag)
-            return { ...record, vj: newValue, qj: "" };
-          if (record?.qk === instructionTag?.tag)
-            return { ...record, vk: newValue, qk: "" };
-          if (index === indexInBuffer) return new OperationBuffer();
-          return record;
-        });
+      setMulBuffer((prevBuffer) =>
+        updateOperationBuffer(
+          prevBuffer,
+          instructionTag,
+          newValue,
+          tagLetter === "M" ? indexInBuffer : null
+        )
+      );
 
-        if (JSON.stringify(prevBuffer) !== JSON.stringify(updatedBuffer)) {
-          //console.log("here");
-          updateChangedBuffers("mulBuffer");
-        }
+      setAddBuffer((prevBuffer) =>
+        updateOperationBuffer(
+          prevBuffer,
+          instructionTag,
+          newValue,
+          tagLetter === "A" ? indexInBuffer : null
+        )
+      );
 
-        return updatedBuffer;
-      });
-      setAddBuffer((prevBuffer) => {
-        const updatedBuffer = prevBuffer.map((record) => {
-          if (record?.qj === instructionTag?.tag)
-            return { ...record, vj: newValue, qj: "" };
-          if (record?.qk === instructionTag?.tag)
-            return { ...record, vk: newValue, qk: "" };
-          return record;
-        });
-
-        if (JSON.stringify(prevBuffer) !== JSON.stringify(updatedBuffer)) {
-          updateChangedBuffers("addBuffer");
-        }
-
-        return updatedBuffer;
-      });
-      setStoreBuffer((prevBuffer) => {
-        const updatedBuffer = prevBuffer.map((record) => {
-          return record?.q === instructionTag?.tag
+      setStoreBuffer((prevBuffer) =>
+        prevBuffer.map((record) =>
+          record?.q === instructionTag?.tag
             ? { ...record, v: newValue, q: "" }
-            : record;
-        });
+            : record
+        )
+      );
 
-        if (JSON.stringify(prevBuffer) !== JSON.stringify(updatedBuffer)) {
-          updateChangedBuffers("storeBuffer");
-        }
-
-        return updatedBuffer;
-      });
       setRegisterFile((prevRegisterFile) =>
-        prevRegisterFile.map((record, index) => {
-          if (index === indexInRegisterFile) {
-            if (record?.qi === instructionTag?.tag)
-              return { ...record, value: newValue, qi: "0" };
-            return { ...record, value: newValue };
-          }
-          return record;
-        })
-      );
-      //location set to "" since removed from buffers (completed)
-      setSummary((prevSummary) =>
-        prevSummary.map((record, index) => {
-          if (index === indexInSummary)
-            return { ...record, writeBack: GLOBAL_CLK, location: "" };
-          return record;
-        })
+        updateRegisterFile(
+          prevRegisterFile,
+          instructionTag,
+          newValue,
+          indexInRegisterFile
+        )
       );
 
+      setSummary((prevSummary) =>
+        updateSummary(prevSummary, indexInSummary, GLOBAL_CLK)
+      );
       break;
-    case "A":
-      // console.log(
-      //   `addBuffer in WritebackComponent: ${JSON.stringify(addBuffer)}`
-      // );
-      // console.log(`SUMMARY in WritebackComponent: ${JSON.stringify(summary)}`);
-      break;
-    case "L":
+    }
+    case "L": {
       const type = tagLetter[2];
       if (type === "S") {
         console.log("load-single");
@@ -239,6 +243,7 @@ const WritebackQuestion = (
         console.log("load-double");
       }
       break;
+    }
   }
 };
 

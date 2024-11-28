@@ -18,8 +18,7 @@ const IssueQuestion = (
   setStoreBuffer,
   SET_LINE_TXT,
   setSummary,
-  setRegisterFile,
-  setStalledBuffer
+  setRegisterFile
 ) => {
   const instructionType = SplitData(fileContent[LINE_TXT])[0];
 
@@ -147,7 +146,6 @@ const IssueQuestion = (
         }
       } else {
         SET_LINE_TXT((prev) => prev - 1);
-        setStalledBuffer("mulBuffer");
         // console.log("CHECK IF STALL WORKS");
         //if no space RETURN (stall) (NOT DONE YET)
       }
@@ -236,7 +234,6 @@ const IssueQuestion = (
         }
       } else {
         SET_LINE_TXT((prev) => prev - 1);
-        setStalledBuffer("addBuffer");
         // console.log("CHECK IF STALL WORKS");
         //if no space RETURN (stall) (NOT DONE YET)
       }
