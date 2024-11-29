@@ -1,4 +1,4 @@
-export const ExecutionQuestionBefore = (
+const ExecutionQuestion = (
   summary,
   addBuffer,
   mulBuffer,
@@ -13,7 +13,6 @@ export const ExecutionQuestionBefore = (
   divHit,
   GLOBAL_CLK
 ) => {
-  console.log(`summaryBefore: ${JSON.stringify(summary)}`);
   for (let i = 0; i < summary.length; i++) {
     //loop over all the summary
     if (!summary[i].executionComplete && summary[i].issue < GLOBAL_CLK) {
@@ -69,24 +68,7 @@ export const ExecutionQuestionBefore = (
       }
     }
   }
-};
 
-export const ExecutionQuestionAfter = (
-  summary,
-  addBuffer,
-  mulBuffer,
-  storeBuffer,
-  setSummary,
-  missDone,
-  memMiss,
-  memHit,
-  addHit,
-  subHit,
-  mulHit,
-  divHit,
-  GLOBAL_CLK
-) => {
-  console.log(`summaryAfter: ${JSON.stringify(summary)}`);
   for (let i = 0; i < summary.length; i++) {
     if (!summary[i].executionComplete.split("...")[1]) {
       //if execution ends in ...
@@ -121,6 +103,8 @@ export const ExecutionQuestionAfter = (
           }
           break;
       }
+
+      console.log(`timeForOp: ${timeForOp}`);
       if (
         GLOBAL_CLK -
           parseInt(summary[i].executionComplete.split("...")[0]) +
@@ -146,3 +130,5 @@ export const ExecutionQuestionAfter = (
     }
   }
 };
+
+export default ExecutionQuestion;

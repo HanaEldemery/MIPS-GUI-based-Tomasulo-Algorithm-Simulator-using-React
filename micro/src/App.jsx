@@ -9,6 +9,7 @@ import StoreBuffer from "./buffers/storeBuffer";
 import OperationBuffer from "./buffers/operationBuffer";
 
 import IssueQuestion from "./helpers/issueQuestion";
+import ExecutionQuestion from "./helpers/executeQuestion";
 import WritebackQuestion from "./helpers/writebackQuestion";
 
 import RegisterFile from "./table/registerFile";
@@ -27,11 +28,17 @@ const App = () => {
   const [registerFile, setRegisterFile] = useState([]);
   const [summary, setSummary] = useState([]);
 
-  const [isChildStateUpdated, setIsChildStateUpdated] = useState(false);
+  const [isExecuteStateUpdated, setIsExecuteStateUpdated] = useState(false);
+  const [isWritebackStateUpdated, setIsWritebackStateUpdated] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [missDone, setMissDone] = useState(false);
 
-  const handleChildStateUpdate = () => {
-    setIsChildStateUpdated(true);
+  const handleExecuteStateUpdate = () => {
+    setIsExecuteStateUpdated(true);
+  };
+
+  const handleWritebackStateUpdate = () => {
+    setIsWritebackStateUpdated(true);
   };
 
   const startQuestion = () => {};
@@ -94,64 +101,35 @@ const App = () => {
         setRegisterFile
       );
 
-      handleChildStateUpdate();
-    } else if (GLOBAL_CLK !== 0) setIsChildStateUpdated(true);
-
-    // test //
-    if (GLOBAL_CLK === 2) {
-      setSummary((prevSummary) =>
-        prevSummary.map((record, index) => {
-          if (index === 0) return { ...record, executionComplete: "2...7" };
-          return record;
-        })
-      );
-      setIsChildStateUpdated(true);
-    } else if (GLOBAL_CLK === 4) {
-      setSummary((prevSummary) =>
-        prevSummary.map((record, index) => {
-          if (index === 2) return { ...record, executionComplete: "4...7" };
-          return record;
-        })
-      );
-      setIsChildStateUpdated(true);
-    } else if (GLOBAL_CLK === 5) {
-      setSummary((prevSummary) =>
-        prevSummary.map((record, index) => {
-          if (index === 3) return { ...record, executionComplete: "5...8" };
-          return record;
-        })
-      );
-      setIsChildStateUpdated(true);
-    } else if (GLOBAL_CLK === 9) {
-      setSummary((prevSummary) =>
-        prevSummary.map((record, index) => {
-          if (index === 1) return { ...record, executionComplete: "9...12" };
-          return record;
-        })
-      );
-      setIsChildStateUpdated(true);
-    } else if (GLOBAL_CLK === 11) {
-      setSummary((prevSummary) =>
-        prevSummary.map((record, index) => {
-          if (index === 4) return { ...record, executionComplete: "11...16" };
-          return record;
-        })
-      );
-      setIsChildStateUpdated(true);
-    } else if (GLOBAL_CLK === 18) {
-      setSummary((prevSummary) =>
-        prevSummary.map((record, index) => {
-          if (index === 5) return { ...record, executionComplete: "18...21" };
-          return record;
-        })
-      );
-      setIsChildStateUpdated(true);
-    }
-    //      //
+      handleExecuteStateUpdate();
+    } else if (GLOBAL_CLK !== 0) setIsExecuteStateUpdated(true);
   }, [GLOBAL_CLK]);
 
   useEffect(() => {
-    if (isChildStateUpdated) {
+    if (isExecuteStateUpdated) {
+      ExecutionQuestion(
+        summary,
+        addBuffer,
+        mulBuffer,
+        storeBuffer,
+        setSummary,
+        missDone,
+        8,
+        2,
+        4,
+        4,
+        6,
+        6,
+        GLOBAL_CLK
+      );
+
+      handleWritebackStateUpdate();
+      setIsExecuteStateUpdated(false);
+    }
+  }, [isExecuteStateUpdated, GLOBAL_CLK]);
+
+  useEffect(() => {
+    if (isWritebackStateUpdated) {
       WritebackQuestion(
         GLOBAL_CLK,
         mulBuffer,
@@ -165,9 +143,9 @@ const App = () => {
         setSummary
       );
 
-      setIsChildStateUpdated(false);
+      setIsWritebackStateUpdated(false);
     }
-  }, [isChildStateUpdated, GLOBAL_CLK]);
+  }, [isWritebackStateUpdated, GLOBAL_CLK]);
 
   const checkIfDone = () => {
     const summaryFilteredByWriteback = summary.filter(
