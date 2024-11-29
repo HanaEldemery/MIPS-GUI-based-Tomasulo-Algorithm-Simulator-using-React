@@ -1,8 +1,4 @@
-import { useState } from "react";
-
 import OperationBuffer from "../buffers/operationBuffer";
-
-import IssueQuestion from "./issueQuestion";
 
 const instructionToWriteBack = (
   arrayOfInstructionTags,
@@ -147,12 +143,17 @@ const WritebackQuestion = (
         // console.log("-----------");
 
         return (
-          executionComplete &&
-          executionComplete.includes("...") &&
-          record?.executionComplete.split("...")[0] &&
-          record?.executionComplete.split("...")[1] &&
-          record?.writeBack === -1 &&
-          GLOBAL_CLK > parseInt(record?.executionComplete.split("...")[1])
+          (executionComplete &&
+            executionComplete.includes("...") &&
+            executionComplete.split("...")[0] &&
+            executionComplete.split("...")[1] &&
+            record?.writeBack === -1 &&
+            GLOBAL_CLK > parseInt(executionComplete.split("...")[1])) ||
+          (executionComplete &&
+            !executionComplete.includes("...") &&
+            Number(executionComplete.split("...")[0]) &&
+            record?.writeBack === -1 &&
+            GLOBAL_CLK > parseInt(executionComplete.split("...")[0]))
         );
       })
       .map((filteredRecord) => filteredRecord?.location);

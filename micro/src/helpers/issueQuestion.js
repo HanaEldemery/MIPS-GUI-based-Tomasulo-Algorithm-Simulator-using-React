@@ -228,9 +228,9 @@ const IssueQuestion = (
             newRegisterFile[indexRegisterInRegisterFile].qi = `A${index + 1}`;
           setRegisterFile(newRegisterFile);
 
-          console.log(`addBuffer: ${JSON.stringify(newAddBuffer)}`);
-          console.log(`SUMMARY: ${JSON.stringify(newSummary)}`);
-          console.log(`registerFile: ${JSON.stringify(newRegisterFile)}`);
+          //console.log(`addBuffer: ${JSON.stringify(newAddBuffer)}`);
+          //console.log(`SUMMARY: ${JSON.stringify(newSummary)}`);
+          //console.log(`registerFile: ${JSON.stringify(newRegisterFile)}`);
         }
       } else {
         SET_LINE_TXT((prev) => prev - 1);
