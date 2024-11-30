@@ -24,40 +24,47 @@ const IssueQuestion = (
 
   let check;
   switch (instructionType) {
-    case "MUL.D":
-    case "DIV.D":
-      check = "mul-buffer";
+    case "MUL.D": //
+    case "MUL.S": //
+    case "DIV.D": //
+    case "DIV.S": //
+      check = "mul-buffer"; //
       break;
-    case "ADD.D":
-    case "SUB.D":
-      check = "add-buffer";
+    case "ADD.D": //
+    case "ADD.S": //
+    case "SUB.D": //
+    case "SUB.S": //
+      check = "add-buffer"; //
       break;
-    case "L.S":
-    case "L.D":
-      check = "load-buffer";
+    case "L.S": //
+    case "L.D": //
+      check = "load-buffer"; //
       break;
-    case "S.S":
-    case "S.D":
-      check = "store-buffer";
+    case "S.S": //
+    case "S.D": //
+      check = "store-buffer"; //
       break;
-    case "ADDI":
-    case "SUBI":
-      check = "int-add";
-      break;
-    case "LW":
+    case "LW": //
       check = "int-load-word";
       break;
-    case "LD":
+    case "LD": //
       check = "int-load-double";
       break;
-    case "SW":
+    case "SW": //
       check = "int-store-word";
       break;
-    case "SD":
+    case "SD": //
       check = "int-store-double";
       break;
-    case "BNEZ":
+    case "BNE": //
+    case "BEQ": //
       check = "int-branch";
+      break;
+    case "DADDI": //
+      check = "double-add-immediate";
+      break;
+    case "DSUBI": //
+      check = "double-subtract-immediate";
       break;
   }
 
@@ -239,10 +246,128 @@ const IssueQuestion = (
       }
       break;
     case "load-buffer":
+      //law fi makan fel loadBuffer
+      if (loadBuffer.some((record) => record.busy === 0)) {
+        const index = loadBuffer.findIndex((record) => record.busy === 0);
+
+        const splitData = SplitData(fileContent[LINE_TXT]);
+
+        const registerOutput = splitData[1];
+
+        const newRegisterFile = [...registerFile];
+        const indexRegisterInRegisterFile = newRegisterFile.findIndex(
+          (register) => register.register === registerOutput
+        );
+
+        const addressInput = splitData[2];
+        if (index !== -1) {
+          //place in loadBuffer
+          const newLoadBuffer = [...loadBuffer];
+          newLoadBuffer[index] = {
+            ...newLoadBuffer[index],
+            busy: 1,
+            address: addressInput,
+            indexInRegisterFile: indexRegisterInRegisterFile,
+            indexInSummary: summary.length,
+          };
+          setLoadBuffer(newLoadBuffer);
+
+          //console.log(`loadBuffer issued: ${JSON.stringify(newLoadBuffer)}`);
+
+          const newSummary = [
+            ...summary,
+            new Summary(
+              GLOBAL_ITERATION,
+              fileContent[LINE_TXT],
+              addressInput,
+              addressInput,
+              GLOBAL_CLK,
+              "",
+              -1,
+              `L${index + 1}`
+            ),
+          ];
+          setSummary(newSummary);
+
+          //place in registerFile
+          if (indexRegisterInRegisterFile !== -1)
+            newRegisterFile[indexRegisterInRegisterFile].qi = `L${index + 1}`;
+          setRegisterFile(newRegisterFile);
+        }
+      } else {
+        SET_LINE_TXT((prev) => prev - 1);
+        console.log("CHECK IF STALL WORKS");
+      }
       break;
     case "store-buffer":
-      break;
-    case "int-add":
+      //law fi makan fel storeBuffer
+      if (storeBuffer.some((record) => record.busy === 0)) {
+        const index = storeBuffer.findIndex((record) => record.busy === 0);
+
+        const splitData = SplitData(fileContent[LINE_TXT]);
+
+        const registerOutput = splitData[1];
+        const addressInput = splitData[2];
+
+        const newRegisterFile = [...registerFile];
+        const indexRegisterInRegisterFile = newRegisterFile.findIndex(
+          (register) => register.register === registerOutput
+        );
+
+        const qOfRegister = registerFile.find(
+          (register) => register.register === registerOutput
+        ).qi;
+
+        let v, q;
+        if (qOfRegister === "0") {
+          v = registerOutput;
+          q = "";
+        } else {
+          v = "";
+          q = qOfRegister;
+        }
+
+        if (index !== -1) {
+          //place in storeBuffer
+          const newStoreBuffer = [...storeBuffer];
+          newStoreBuffer[index] = {
+            ...newStoreBuffer[index],
+            busy: 1,
+            v: v,
+            q: q,
+            address: addressInput,
+            indexInRegisterFile: indexRegisterInRegisterFile,
+            indexInSummary: summary.length,
+          };
+          setStoreBuffer(newStoreBuffer);
+
+          console.log(`storeBuffer issued: ${JSON.stringify(newStoreBuffer)}`);
+
+          //place in summary
+          const newSummary = [
+            ...summary,
+            new Summary(
+              GLOBAL_ITERATION,
+              fileContent[LINE_TXT],
+              addressInput,
+              addressInput,
+              GLOBAL_CLK,
+              "",
+              -1,
+              `S${index + 1}`
+            ),
+          ];
+          setSummary(newSummary);
+
+          //place in registerFile
+          if (indexRegisterInRegisterFile !== -1)
+            newRegisterFile[indexRegisterInRegisterFile].qi = `L${index + 1}`;
+          setRegisterFile(newRegisterFile);
+        }
+      } else {
+        SET_LINE_TXT((prev) => prev - 1);
+        console.log("CHECK IF STALL WORKS");
+      }
       break;
     case "int-load-word":
       break;
@@ -253,6 +378,10 @@ const IssueQuestion = (
     case "int-store-double":
       break;
     case "int-branch":
+      break;
+    case "double-add-immediate":
+      break;
+    case "double-subtract-immediate":
       break;
   }
 

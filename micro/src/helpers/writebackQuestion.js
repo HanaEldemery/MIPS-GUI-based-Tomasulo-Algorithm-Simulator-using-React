@@ -1,4 +1,6 @@
 import OperationBuffer from "../buffers/operationBuffer";
+import StoreBuffer from "../buffers/storeBuffer";
+import LoadBuffer from "../buffers/loadBuffer";
 
 const instructionToWriteBack = (
   arrayOfInstructionTags,
@@ -107,11 +109,13 @@ const WritebackQuestion = (
   mulBuffer,
   addBuffer,
   storeBuffer,
+  loadBuffer,
   summary,
   setRegisterFile,
   setMulBuffer,
   setAddBuffer,
   setStoreBuffer,
+  setLoadBuffer,
   setSummary
 ) => {
   //arrayOfInstructionTags ==> loop on (summary) and check for each record if anything after ... && writeBack === -1)
@@ -128,6 +132,9 @@ const WritebackQuestion = (
   //         //
 
   //GLOBAL_CLK > parseInt(record?.executionComplete.split("...")[1]) ==> cannot writeback in same cycle as complete execution
+
+  //console.log(`loadBuffer 0: ${JSON.stringify(loadBuffer)}`);
+
   const arrayOfInstructionTags =
     summary?.length &&
     summary
@@ -161,12 +168,19 @@ const WritebackQuestion = (
   if (!arrayOfInstructionTags?.length)
     return console.log("nothing ready for writeback");
 
+  //console.log(`arrayOfInstructionTags: ${arrayOfInstructionTags}`);
+
+  //console.log(`loadBuffer 2: ${JSON.stringify(loadBuffer)}`);
+
   const instructionTag = instructionToWriteBack(
     arrayOfInstructionTags,
     mulBuffer,
     addBuffer,
     storeBuffer
   );
+
+  //console.log(`loadBuffer 1: ${JSON.stringify(loadBuffer)}`);
+  //console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
 
   //console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
 
@@ -236,13 +250,82 @@ const WritebackQuestion = (
       );
       break;
     }
-    case "L": {
-      const type = tagLetter[2];
-      if (type === "S") {
-        console.log("load-single");
-      } else if (type === "D") {
-        console.log("load-double");
-      }
+    case "L":
+    case "S": {
+      const buffer = tagLetter === "L" ? loadBuffer : storeBuffer;
+      const indexInBuffer = parseInt(instructionTag?.tag.slice(1)) - 1;
+      const indexInRegisterFile = buffer[indexInBuffer].indexInRegisterFile;
+      const indexInSummary = buffer[indexInBuffer]?.indexInSummary;
+      const operationString =
+        summary[indexInSummary]?.instruction.split(" ")[0];
+      const address = summary[indexInSummary]?.instruction.split(" ")[2];
+      const type = operationString.includes(".")
+        ? operationString.split(".")[1]
+        : operationString.slice(1);
+      newValue = `mem[${address}]`;
+
+      if (type === "S") console.log("load-single");
+      else if (type === "D") console.log("load-double");
+
+      //non floating point should not enter here
+
+      //update the loadBuffer/storeBuffer
+      setLoadBuffer((prevBuffer) => {
+        //console.log(`loadBuffer before: ${JSON.stringify(prevBuffer)}`);
+        const updatedBuffer = prevBuffer.map((record, index) => {
+          if (index === indexInBuffer && tagLetter === "L")
+            return new LoadBuffer();
+          return record;
+        });
+        //console.log(`loadBuffer after: ${JSON.stringify(updatedBuffer)}`);
+        return updatedBuffer;
+      });
+
+      setStoreBuffer((prevBuffer) => {
+        //console.log(`storeBuffer before: ${JSON.stringify(prevBuffer)}`);
+        const updatedBuffer = prevBuffer.map((record, index) => {
+          if (index === indexInBuffer && tagLetter === "S")
+            return new StoreBuffer();
+          return record;
+        });
+        //console.log(`storeBuffer after: ${JSON.stringify(updatedBuffer)}`);
+        return updatedBuffer;
+      });
+
+      //in any other buffer that needs it, go from qj/qk to vj/vk
+      setAddBuffer((prevBuffer) =>
+        updateOperationBuffer(prevBuffer, instructionTag, newValue, null)
+      );
+
+      setMulBuffer((prevBuffer) =>
+        updateOperationBuffer(prevBuffer, instructionTag, newValue, null)
+      );
+
+      //set qi to 0 in register file, set value to result of mem[address];
+      //console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
+      setRegisterFile((prevRegisterFile) => {
+        // console.log(
+        //   `prevRegisterFile before: ${JSON.stringify(prevRegisterFile)}`
+        // );
+        const updatedRegisterFile = updateRegisterFile(
+          prevRegisterFile,
+          instructionTag,
+          newValue,
+          indexInRegisterFile
+        );
+        // console.log(
+        //   `prevRegisterFile after: ${JSON.stringify(updatedRegisterFile)}`
+        // );
+        return updatedRegisterFile;
+      });
+
+      //write current clk cycle to summary
+      // console.log(`tagLetter: ${tagLetter}`);
+      // console.log(`buffer: ${JSON.stringify(buffer)}`);
+      // console.log(`indexInSummary: ${indexInSummary}`);
+      setSummary((prevSummary) =>
+        updateSummary(prevSummary, indexInSummary, GLOBAL_CLK)
+      );
       break;
     }
   }

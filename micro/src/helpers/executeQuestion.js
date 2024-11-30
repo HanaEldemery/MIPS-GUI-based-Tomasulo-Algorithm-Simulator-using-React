@@ -4,7 +4,6 @@ const ExecutionQuestion = (
   mulBuffer,
   storeBuffer,
   setSummary,
-  missDone,
   memMiss,
   memHit,
   addHit,
@@ -19,15 +18,19 @@ const ExecutionQuestion = (
       let locIndex = parseInt(summary[i].location.slice(1)) - 1;
       const locationLoadsStoresInSummary = summary
         .map((record, index) =>
-          record?.location[0] === "L" || "S" ? index : -1
+          record?.location[0] === "L" || record?.location[0] === "S"
+            ? index
+            : -1
         )
         .filter((mappedRecord) => mappedRecord !== -1);
+
       //if summary elem has not started execution yet
       let operationTime;
       if (summary[i].location[0] === "M") {
         //if mul div operation
         operationTime =
-          summary[i]?.instruction.split(" ")[0] === ("MUL.D" || "MUL.S")
+          summary[i]?.instruction.split(" ")[0] === "MUL.D" ||
+          summary[i]?.instruction.split(" ")[0] === "MUL.S"
             ? mulHit
             : divHit;
         if (!mulBuffer[locIndex].qj && !mulBuffer[locIndex].qk) {
@@ -47,7 +50,8 @@ const ExecutionQuestion = (
         }
       } else if (summary[i].location[0] === "A") {
         operationTime =
-          summary[i]?.instruction.split(" ")[0] === ("ADD.D" || "ADD.S")
+          summary[i]?.instruction.split(" ")[0] === "ADD.D" ||
+          summary[i]?.instruction.split(" ")[0] === "ADD.S"
             ? addHit
             : subHit;
         if (!addBuffer[locIndex].qj && !addBuffer[locIndex].qk) {
@@ -62,33 +66,33 @@ const ExecutionQuestion = (
               )
             );
           }
-        } else if (summary[i].location[0] === "L") {
-          operationTime =
-            i === locationLoadsStoresInSummary[0] ? memMiss : memHit;
-          setSummary((prevSum) =>
-            prevSum.map((item, index) =>
-              index === i
-                ? operationTime === 1
-                  ? { ...item, executionComplete: `${GLOBAL_CLK}` }
-                  : { ...item, executionComplete: `${GLOBAL_CLK}...` }
-                : item
-            )
-          );
-        } else if (summary[i].location[0] === "S") {
-          operationTime =
-            i === locationLoadsStoresInSummary[0] ? memMiss : memHit;
-          if (!storeBuffer[locIndex].q) {
-            {
-              setSummary((prevSum) =>
-                prevSum.map((item, index) =>
-                  index === i
-                    ? operationTime === 1
-                      ? { ...item, executionComplete: `${GLOBAL_CLK}` }
-                      : { ...item, executionComplete: `${GLOBAL_CLK}...` }
-                    : item
-                )
-              );
-            }
+        }
+      } else if (summary[i].location[0] === "L") {
+        operationTime =
+          i === locationLoadsStoresInSummary[0] ? memMiss : memHit;
+        setSummary((prevSum) =>
+          prevSum.map((item, index) =>
+            index === i
+              ? operationTime === 1
+                ? { ...item, executionComplete: `${GLOBAL_CLK}` }
+                : { ...item, executionComplete: `${GLOBAL_CLK}...` }
+              : item
+          )
+        );
+      } else if (summary[i].location[0] === "S") {
+        operationTime =
+          i === locationLoadsStoresInSummary[0] ? memMiss : memHit;
+        if (!storeBuffer[locIndex].q) {
+          {
+            setSummary((prevSum) =>
+              prevSum.map((item, index) =>
+                index === i
+                  ? operationTime === 1
+                    ? { ...item, executionComplete: `${GLOBAL_CLK}` }
+                    : { ...item, executionComplete: `${GLOBAL_CLK}...` }
+                  : item
+              )
+            );
           }
         }
       }
@@ -96,6 +100,14 @@ const ExecutionQuestion = (
   }
 
   for (let i = 0; i < summary.length; i++) {
+    const locationLoadsStoresInSummary = summary
+      .map((record, index) =>
+        record?.instruction.split(" ")[0][0] === "L" ||
+        record?.instruction.split(" ")[0][0] === "S"
+          ? index
+          : -1
+      )
+      .filter((mappedRecord) => mappedRecord !== -1);
     //enters law MESH haga bt-execute fe 1 clk cycle AND yet to have finished execution
     if (
       summary[i].executionComplete &&
@@ -108,11 +120,13 @@ const ExecutionQuestion = (
       switch (summary[i].location[0]) {
         case "L":
         case "S":
-          if (missDone) {
-            timeForOp = memHit;
-          } else {
-            timeForOp = memMiss;
-          }
+          // console.log(
+          //   `locationLoadsStoresInSummary[0]: ${JSON.stringify(
+          //     locationLoadsStoresInSummary
+          //   )}`
+          // );
+          timeForOp = locationLoadsStoresInSummary[0] === i ? memMiss : memHit;
+          // console.log(`timeForOp: ${timeForOp}`);
           break;
         case "M":
           if (

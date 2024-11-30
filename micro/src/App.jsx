@@ -41,10 +41,6 @@ const App = () => {
     setIsWritebackStateUpdated(true);
   };
 
-  const startQuestion = () => {};
-
-  const endQuestion = () => {};
-
   useEffect(() => {
     //user input (sizes)
     const initialMulBuffer = [];
@@ -113,12 +109,11 @@ const App = () => {
         mulBuffer,
         storeBuffer,
         setSummary,
-        missDone,
-        8,
+        3,
         2,
         4,
         4,
-        1,
+        6,
         6,
         GLOBAL_CLK
       );
@@ -130,16 +125,19 @@ const App = () => {
 
   useEffect(() => {
     if (isWritebackStateUpdated) {
+      //(`loadBuffer -1: ${JSON.stringify(loadBuffer)}`);
       WritebackQuestion(
         GLOBAL_CLK,
         mulBuffer,
         addBuffer,
         storeBuffer,
+        loadBuffer,
         summary,
         setRegisterFile,
         setMulBuffer,
         setAddBuffer,
         setStoreBuffer,
+        setLoadBuffer,
         setSummary
       );
 
