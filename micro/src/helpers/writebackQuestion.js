@@ -284,6 +284,10 @@ const WritebackQuestion = (
       setStoreBuffer((prevBuffer) => {
         //console.log(`storeBuffer before: ${JSON.stringify(prevBuffer)}`);
         const updatedBuffer = prevBuffer.map((record, index) => {
+          //console.log(`instructionTag?.tag: ${instructionTag?.tag}`);
+          //console.log(`record?.q: ${record?.q}`);
+          if (record?.q === instructionTag?.tag)
+            return { ...record, v: newValue, q: "" };
           if (index === indexInBuffer && tagLetter === "S")
             return new StoreBuffer();
           return record;

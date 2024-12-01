@@ -13,9 +13,42 @@ import ExecutionQuestion from "./helpers/executeQuestion";
 import WritebackQuestion from "./helpers/writebackQuestion";
 
 import RegisterFile from "./table/registerFile";
+import IntegerRegisterFile from "./table/integerRegisterFile";
 
 const App = () => {
-  const fileContent = FetchFileContent();
+  const fileContentBefore = FetchFileContent();
+  //console.log(`fileContent: ${fileContent}`);
+
+  let objectLoopNameAndIndex = [];
+  let fileContent = [];
+  for (const line in fileContentBefore) {
+    //console.log(`line: ${fileContentBefore[line]}`);
+    const arrayOfLine = fileContentBefore[line].split(" ");
+    const firstElement = arrayOfLine[0];
+    const firstElementLength = firstElement.length;
+    //console.log(`firstElementLength: ${firstElement.length}`);
+    //console.log(`arrayOfLine: ${arrayOfLine}`);
+    if (firstElement.endsWith(":")) {
+      objectLoopNameAndIndex = [
+        ...objectLoopNameAndIndex,
+        { name: firstElement.slice(0, firstElement.length - 1), index: line },
+      ];
+      fileContent = [
+        ...fileContent,
+        fileContentBefore[line].slice(
+          firstElementLength + 1,
+          fileContentBefore[line].length
+        ),
+      ];
+      // console.log(
+      //   `fileContentBefore[line].slice(0, firstElementLength): ${fileContentBefore[
+      //     line
+      //   ].slice(firstElementLength + 1, fileContentBefore[line].length)}`
+      // );
+    } else fileContent = [...fileContent, fileContentBefore[line]];
+  }
+
+  //console.log(`fileContent: ${fileContent}`);
 
   const [GLOBAL_CLK, SET_GLOBAL_CLK] = useState(0);
   const [GLOBAL_ITERATION, SET_GLOBAL_ITERATION] = useState(0);
@@ -26,6 +59,7 @@ const App = () => {
   const [loadBuffer, setLoadBuffer] = useState([]);
   const [storeBuffer, setStoreBuffer] = useState([]);
   const [registerFile, setRegisterFile] = useState([]);
+  const [integerRegisterFile, setIntegerRegisterFile] = useState([]);
   const [summary, setSummary] = useState([]);
 
   const [isExecuteStateUpdated, setIsExecuteStateUpdated] = useState(false);
@@ -73,16 +107,27 @@ const App = () => {
       initialRegisterFile.push(new RegisterFile(register, `${i}`, "0"));
     }
     setRegisterFile(initialRegisterFile);
+
+    const initialIntegerRegisterFile = [];
+    for (let i = 0; i < 12; i++) {
+      let register = `R${i}`;
+      initialIntegerRegisterFile.push(
+        new IntegerRegisterFile(register, `${i}`)
+      );
+    }
+    setIntegerRegisterFile(initialIntegerRegisterFile);
   }, []);
 
   useEffect(() => {
     if (fileContent?.length > 0 && LINE_TXT < fileContent?.length) {
       IssueQuestion(
         fileContent,
+        objectLoopNameAndIndex,
         LINE_TXT,
         GLOBAL_CLK,
         GLOBAL_ITERATION,
         registerFile,
+        integerRegisterFile,
         mulBuffer,
         addBuffer,
         loadBuffer,
@@ -94,7 +139,9 @@ const App = () => {
         setStoreBuffer,
         SET_LINE_TXT,
         setSummary,
-        setRegisterFile
+        setRegisterFile,
+        setIntegerRegisterFile,
+        SET_GLOBAL_ITERATION
       );
 
       handleExecuteStateUpdate();
@@ -161,7 +208,8 @@ const App = () => {
   const handleOnNextClockCycleClick = () => {
     SET_GLOBAL_CLK((prev) => prev + 1);
     checkIfDone();
-    if (fileContent?.length > LINE_TXT) SET_LINE_TXT((prev) => prev + 1); //check
+    if (fileContent?.length > LINE_TXT) SET_LINE_TXT((prev) => prev + 1);
+    console.log(`GLOBAL_ITERATION: ${GLOBAL_ITERATION}`);
   };
 
   // console.log(
@@ -196,7 +244,15 @@ const App = () => {
       ])}
       {RenderTable("Load Buffer", loadBuffer, ["busy", "address"])}
       {RenderTable("Store Buffer", storeBuffer, ["busy", "address", "v", "q"])}
-      {RenderTable("Register File", registerFile, ["register", "value", "qi"])}
+      {RenderTable("FP Register File", registerFile, [
+        "register",
+        "value",
+        "qi",
+      ])}
+      {RenderTable("Integer Register File", integerRegisterFile, [
+        "register",
+        "value",
+      ])}
       {RenderTable("Summary", summary, [
         "iteration",
         "instruction",

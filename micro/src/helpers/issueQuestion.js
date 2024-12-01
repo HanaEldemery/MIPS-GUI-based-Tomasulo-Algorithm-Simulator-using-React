@@ -3,10 +3,12 @@ import Summary from "../table/summary";
 
 const IssueQuestion = (
   fileContent,
+  objectLoopNameAndIndex,
   LINE_TXT,
   GLOBAL_CLK,
   GLOBAL_ITERATION,
   registerFile,
+  integerRegisterFile,
   mulBuffer,
   addBuffer,
   loadBuffer,
@@ -18,9 +20,12 @@ const IssueQuestion = (
   setStoreBuffer,
   SET_LINE_TXT,
   setSummary,
-  setRegisterFile
+  setRegisterFile,
+  setIntegerRegisterFile,
+  SET_GLOBAL_ITERATION
 ) => {
   const instructionType = SplitData(fileContent[LINE_TXT])[0];
+  //console.log(`instructionType: ${instructionType}`);
 
   let check;
   switch (instructionType) {
@@ -314,9 +319,9 @@ const IssueQuestion = (
           (register) => register.register === registerOutput
         );
 
-        const qOfRegister = registerFile.find(
-          (register) => register.register === registerOutput
-        ).qi;
+        const qOfRegister = registerFile[indexRegisterInRegisterFile].qi;
+
+        //console.log(`qOfRegister: ${qOfRegister}`);
 
         let v, q;
         if (qOfRegister === "0") {
@@ -336,12 +341,12 @@ const IssueQuestion = (
             v: v,
             q: q,
             address: addressInput,
-            indexInRegisterFile: indexRegisterInRegisterFile,
+            indexInRegisterFile: -1,
             indexInSummary: summary.length,
           };
           setStoreBuffer(newStoreBuffer);
 
-          console.log(`storeBuffer issued: ${JSON.stringify(newStoreBuffer)}`);
+          //console.log(`storeBuffer issued: ${JSON.stringify(newStoreBuffer)}`);
 
           //place in summary
           const newSummary = [
@@ -359,10 +364,10 @@ const IssueQuestion = (
           ];
           setSummary(newSummary);
 
-          //place in registerFile
-          if (indexRegisterInRegisterFile !== -1)
-            newRegisterFile[indexRegisterInRegisterFile].qi = `L${index + 1}`;
-          setRegisterFile(newRegisterFile);
+          // //place in registerFile
+          // if (indexRegisterInRegisterFile !== -1)
+          //   newRegisterFile[indexRegisterInRegisterFile].qi = `S${index + 1}`;
+          // setRegisterFile(newRegisterFile);
         }
       } else {
         SET_LINE_TXT((prev) => prev - 1);
@@ -378,6 +383,49 @@ const IssueQuestion = (
     case "int-store-double":
       break;
     case "int-branch":
+      const currentInstruction = fileContent[LINE_TXT];
+      const splitInstruction = currentInstruction.split(" ");
+      const whichLoop = splitInstruction[3];
+      //console.log(`whichLoop: ${whichLoop}`);
+      //console.log(`whichLoop type: ${typeof whichLoop}`);
+      const loopToIndex = parseInt(
+        objectLoopNameAndIndex.find((record) => record?.name === whichLoop)
+          .index
+      );
+      //console.log(`loopToIndex: ${typeof loopToIndex}`);
+      const firstRegister = splitInstruction[1];
+      const secondRegister = splitInstruction[2];
+      //console.log(`firstRegister: ${firstRegister}`);
+      //console.log(`secondRegister: ${secondRegister}`);
+      const firstRegisterValue = parseInt(
+        integerRegisterFile.find(
+          (register) => register?.register === firstRegister
+        ).value
+      );
+      const secondRegisterValue = parseInt(
+        integerRegisterFile.find(
+          (register) => register?.register === secondRegister
+        ).value
+      );
+      //console.log(`firstRegisterValue: ${firstRegisterValue}`);
+      //console.log(`secondRegisterValue: ${secondRegisterValue}`);
+
+      if (
+        instructionType === "BNE" &&
+        firstRegisterValue !== secondRegisterValue
+      ) {
+        SET_LINE_TXT(loopToIndex - 1);
+        SET_GLOBAL_ITERATION((prev) => prev + 1);
+      }
+
+      if (
+        instructionType === "BEQ" &&
+        firstRegisterValue === secondRegisterValue
+      ) {
+        SET_LINE_TXT(loopToIndex - 1);
+        SET_GLOBAL_ITERATION((prev) => prev + 1);
+      }
+      //console.log(`typeof GLOBAL_ITERATION: ${typeof GLOBAL_ITERATION}`);
       break;
     case "double-add-immediate":
       break;
@@ -385,6 +433,7 @@ const IssueQuestion = (
       break;
   }
 
+  //console.log(`summary: ${JSON.stringify(summary)}`);
   //console.log(instructionType);
 };
 

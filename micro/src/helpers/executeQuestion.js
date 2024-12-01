@@ -82,6 +82,7 @@ const ExecutionQuestion = (
       } else if (summary[i].location[0] === "S") {
         operationTime =
           i === locationLoadsStoresInSummary[0] ? memMiss : memHit;
+        console.log(`storeBuffer[locIndex].q: ${storeBuffer[locIndex].q}`);
         if (!storeBuffer[locIndex].q) {
           {
             setSummary((prevSum) =>

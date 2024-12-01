@@ -30,9 +30,7 @@ const RenderTable = (title, buffer = [], headers = []) => {
                       key={header}
                       className="border border-gray-300 px-4 py-2 text-gray-600"
                     >
-                      {item?.[header] === "" || item?.[header] === 0
-                        ? "-"
-                        : item?.[header] ?? "-"}
+                      {item?.[header] === "" ? "-" : item?.[header] ?? "-"}
                     </td>
                   ))}
                 </tr>
