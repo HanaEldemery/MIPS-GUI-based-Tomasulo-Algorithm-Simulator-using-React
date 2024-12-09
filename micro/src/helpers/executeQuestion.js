@@ -1,5 +1,6 @@
 const ExecutionQuestion = (
   summary,
+  cache,
   addBuffer,
   mulBuffer,
   storeBuffer,

@@ -14,8 +14,21 @@ import WritebackQuestion from "./helpers/writebackQuestion";
 
 import RegisterFile from "./table/registerFile";
 import IntegerRegisterFile from "./table/integerRegisterFile";
+import Memory from "./table/memory";
+import Cache from "./table/cache";
 
 const App = () => {
+  const memMiss = 3;
+  const memHit = 2;
+  const addHit = 4;
+  const subHit = 4;
+  const mulHit = 6;
+  const divHit = 6;
+
+  const cacheSize = 48;
+  const blockSize = 16;
+  const numberOfBlocks = parseInt(48 / 16); //this is not needed if they are always assumed to be divisible
+
   const fileContentBefore = FetchFileContent();
   //console.log(`fileContent: ${fileContent}`);
 
@@ -61,11 +74,27 @@ const App = () => {
   const [registerFile, setRegisterFile] = useState([]);
   const [integerRegisterFile, setIntegerRegisterFile] = useState([]);
   const [summary, setSummary] = useState([]);
+  const [memory, setMemory] = useState([]);
+  const [cache, setCache] = useState([]);
 
   const [isExecuteStateUpdated, setIsExecuteStateUpdated] = useState(false);
   const [isWritebackStateUpdated, setIsWritebackStateUpdated] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [missDone, setMissDone] = useState(false);
+
+  const integerToBinary = (integer) => {
+    if (integer < 0 || integer > 255) {
+      throw new Error("Input must be between 0 and 255 for 8-bit binary.");
+    }
+
+    let binary = "";
+    while (integer > 0) {
+      binary = `${integer % 2}${binary}`;
+      integer = Math.floor(integer / 2);
+    }
+
+    return binary.padStart(8, "0");
+  };
 
   const handleExecuteStateUpdate = () => {
     setIsExecuteStateUpdated(true);
@@ -116,6 +145,20 @@ const App = () => {
       );
     }
     setIntegerRegisterFile(initialIntegerRegisterFile);
+
+    const initialMemory = [];
+    for (let i = 0; i < 100; i++) {
+      let address = i;
+      let value = integerToBinary(i);
+      initialMemory.push(new Memory(address, value));
+    }
+    setMemory(initialMemory);
+    //console.log(JSON.stringify(initialMemory));
+
+    const initialCache = [];
+    for (let i = 0; i < cacheSize; i++) initialCache.push(new Cache(i, -1));
+    setCache(initialCache);
+    //console.log(JSON.stringify(initialCache));
   }, []);
 
   useEffect(() => {
@@ -152,16 +195,17 @@ const App = () => {
     if (isExecuteStateUpdated) {
       ExecutionQuestion(
         summary,
+        cache,
         addBuffer,
         mulBuffer,
         storeBuffer,
         setSummary,
-        3,
-        2,
-        4,
-        4,
-        6,
-        6,
+        memMiss,
+        memHit,
+        addHit,
+        subHit,
+        mulHit,
+        divHit,
         GLOBAL_CLK
       );
 
@@ -253,6 +297,8 @@ const App = () => {
         "register",
         "value",
       ])}
+      {RenderTable("Memory", memory, ["address", "value"])}
+      {RenderTable("Cache", cache, ["address", "which", "value"])}
       {RenderTable("Summary", summary, [
         "iteration",
         "instruction",

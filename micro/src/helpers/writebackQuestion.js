@@ -264,8 +264,14 @@ const WritebackQuestion = (
         : operationString.slice(1);
       newValue = `mem[${address}]`;
 
-      if (type === "S") console.log("load-single");
-      else if (type === "D") console.log("load-double");
+      if (type === "S")
+        tagLetter === "L"
+          ? console.log("load-single")
+          : console.log("store-single");
+      else if (type === "D")
+        tagLetter === "L"
+          ? console.log("load-double")
+          : console.log("store-double");
 
       //non floating point should not enter here
 
