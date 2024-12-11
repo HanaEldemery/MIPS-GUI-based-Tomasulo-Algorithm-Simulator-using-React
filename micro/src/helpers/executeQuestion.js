@@ -1,9 +1,13 @@
 const ExecutionQuestion = (
   summary,
   cache,
+  memory,
+  cacheSize,
+  blockSize,
   addBuffer,
   mulBuffer,
   storeBuffer,
+  setCache,
   setSummary,
   memMiss,
   memHit,
@@ -69,8 +73,35 @@ const ExecutionQuestion = (
           }
         }
       } else if (summary[i].location[0] === "L") {
-        operationTime =
-          i === locationLoadsStoresInSummary[0] ? memMiss : memHit;
+        const startAdr = parseInt(summary[i].instruction.split(" ")[2]);
+        const type = summary[i].instruction.split(" ")[0];
+        //ba3raf ana awza lehad address kam
+        let stopAdr = -1;
+        switch (type) {
+          case "LW":
+          case "L.S":
+            stopAdr = startAdr + 3;
+            break;
+          case "LD":
+          case "L.D":
+            stopAdr = startAdr + 7;
+            break;
+        }
+        //ba3raf ana hit walla miss
+        let miss = true;
+        for (let i = 0; i < cacheSize; i = i + blockSize) {
+          if (
+            startAdr >= cache[i].which &&
+            stopAdr <= cache[i + blockSize - 1].which
+          ) {
+            miss = false;
+            break;
+          }
+        }
+        operationTime = memHit;
+        if (miss) {
+          operationTime = memMiss;
+        }
         setSummary((prevSum) =>
           prevSum.map((item, index) =>
             index === i
@@ -81,10 +112,34 @@ const ExecutionQuestion = (
           )
         );
       } else if (summary[i].location[0] === "S") {
-        operationTime =
-          i === locationLoadsStoresInSummary[0] ? memMiss : memHit;
-        console.log(`storeBuffer[locIndex].q: ${storeBuffer[locIndex].q}`);
         if (!storeBuffer[locIndex].q) {
+          const startAdr = parseInt(summary[i].instruction.split(" ")[2]);
+          const type = summary[i].instruction.split(" ")[0];
+          let stopAdr = -1;
+          switch (type) {
+            case "SW":
+            case "S.S":
+              stopAdr = startAdr + 3;
+              break;
+            case "SD":
+            case "S.D":
+              stopAdr = startAdr + 7;
+              break;
+          }
+          let miss = true;
+          for (let i = 0; i < cacheSize; i = i + blockSize) {
+            if (
+              startAdr >= cache[i].which &&
+              stopAdr <= cache[i + blockSize - 1].which
+            ) {
+              miss = false;
+              break;
+            }
+          }
+          operationTime = memHit;
+          if (miss) {
+            operationTime = memMiss;
+          }
           {
             setSummary((prevSum) =>
               prevSum.map((item, index) =>
@@ -127,7 +182,59 @@ const ExecutionQuestion = (
           //     locationLoadsStoresInSummary
           //   )}`
           // );
-          timeForOp = locationLoadsStoresInSummary[0] === i ? memMiss : memHit;
+          console.log("cache abl ma3raf hit or miss: " + JSON.stringify(cache));
+          const startAdr = parseInt(summary[i].instruction.split(" ")[2]);
+          const type = summary[i].instruction.split(" ")[0];
+          let stopAdr = -1;
+          switch (type) {
+            case "SW":
+            case "S.S":
+            case "LW":
+            case "L.S":
+              stopAdr = startAdr + 3;
+              break;
+            case "SD":
+            case "S.D":
+            case "LD":
+            case "L.D":
+              stopAdr = startAdr + 7;
+              break;
+          }
+          let miss = true;
+          for (let i = 0; i < cacheSize; i = i + blockSize) {
+            if (
+              startAdr >= cache[i].which &&
+              stopAdr <= cache[i + blockSize - 1].which
+            ) {
+              miss = false;
+              break;
+            }
+          }
+          //law miss hagebha mel memory lel cache
+          let newCache = [...cache];
+          if (miss) {
+            //ba3raf ana hahotaha fe anhy block fel cache
+            let noBlocks = cacheSize / blockSize;
+            let blockNumber = startAdr % noBlocks;
+            //bageeb el block men el memory lel cache
+            let startAdrCache = blockNumber * blockSize;
+            let stopFor = startAdr + blockSize;
+            for (let i = startAdr; i < stopFor; i++) {
+              newCache[startAdrCache] = {
+                ...newCache[startAdrCache],
+                value: memory[i].value,
+                which: i,
+              };
+              startAdrCache++;
+            }
+            setCache(newCache);
+          }
+          timeForOp = memHit;
+          if (miss) {
+            timeForOp = memMiss;
+          }
+          console.log("timeForOp: " + timeForOp);
+          //timeForOp = locationLoadsStoresInSummary[0] === i ? memMiss : memHit;
           // console.log(`timeForOp: ${timeForOp}`);
           break;
         case "M":
