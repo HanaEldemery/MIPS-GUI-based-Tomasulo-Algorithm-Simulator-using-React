@@ -308,13 +308,13 @@ const App = () => {
       <div className="my-4 text-center">
         <span className="text-xl font-semibold text-gray-800">
           Current Clock Cycle:{" "}
-          <span className="text-blue-500">{GLOBAL_CLK}</span>
+          <span className="text-purple-500">{GLOBAL_CLK}</span>
         </span>
       </div>
 
       <button
         onClick={handleOnNextClockCycleClick}
-        className="w-full mt-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-blue-700 transition duration-300"
+        className="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 py-3 px-6 text-lg bg-purple-600 text-white font-semibold rounded-lg shadow-lg hover:bg-purple-700 transition duration-300"
       >
         Next Clockcycle
       </button>
