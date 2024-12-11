@@ -25,10 +25,6 @@ const App = () => {
   const mulHit = 6;
   const divHit = 6;
 
-  const cacheSize = 48;
-  const blockSize = 16;
-  const numberOfBlocks = parseInt(48 / 16); //this is not needed if they are always assumed to be divisible
-
   const fileContentBefore = FetchFileContent();
   //console.log(`fileContent: ${fileContent}`);
 
@@ -146,19 +142,19 @@ const App = () => {
     }
     setIntegerRegisterFile(initialIntegerRegisterFile);
 
-    const initialMemory = [];
-    for (let i = 0; i < 100; i++) {
-      let address = i;
-      let value = integerToBinary(i);
-      initialMemory.push(new Memory(address, value));
-    }
-    setMemory(initialMemory);
-    //console.log(JSON.stringify(initialMemory));
+    // const initialMemory = [];
+    // for (let i = 0; i < 100; i++) {
+    //   let address = i;
+    //   let value = integerToBinary(i);
+    //   initialMemory.push(new Memory(address, value));
+    // }
+    // setMemory(initialMemory);
+    // //console.log(JSON.stringify(initialMemory));
 
-    const initialCache = [];
-    for (let i = 0; i < cacheSize; i++) initialCache.push(new Cache(i, -1));
-    setCache(initialCache);
-    //console.log(JSON.stringify(initialCache));
+    // const initialCache = [];
+    // for (let i = 0; i < cacheSize; i++) initialCache.push(new Cache(i, -1));
+    // setCache(initialCache);
+    // //console.log(JSON.stringify(initialCache));
   }, []);
 
   useEffect(() => {
