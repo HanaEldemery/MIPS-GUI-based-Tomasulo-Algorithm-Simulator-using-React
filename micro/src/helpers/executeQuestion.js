@@ -210,30 +210,10 @@ const ExecutionQuestion = (
               break;
             }
           }
-          //law miss hagebha mel memory lel cache
-          let newCache = [...cache];
-          if (miss) {
-            //ba3raf ana hahotaha fe anhy block fel cache
-            let noBlocks = cacheSize / blockSize;
-            let blockNumber = startAdr % noBlocks;
-            //bageeb el block men el memory lel cache
-            let startAdrCache = blockNumber * blockSize;
-            let stopFor = startAdr + blockSize;
-            for (let i = startAdr; i < stopFor; i++) {
-              newCache[startAdrCache] = {
-                ...newCache[startAdrCache],
-                value: memory[i].value,
-                which: i,
-              };
-              startAdrCache++;
-            }
-            setCache(newCache);
-          }
           timeForOp = memHit;
           if (miss) {
             timeForOp = memMiss;
           }
-          console.log("timeForOp: " + timeForOp);
           //timeForOp = locationLoadsStoresInSummary[0] === i ? memMiss : memHit;
           // console.log(`timeForOp: ${timeForOp}`);
           break;
@@ -273,6 +253,51 @@ const ExecutionQuestion = (
           1 ===
         timeForOp
       ) {
+        if (summary[i].location[0] === "L" || summary[i].location[0] === "S") {
+          const startAdr = parseInt(summary[i].instruction.split(" ")[2]);
+          const type = summary[i].instruction.split(" ")[0];
+          let stopAdr = -1;
+          switch (type) {
+            case "SW":
+            case "S.S":
+            case "LW":
+            case "L.S":
+              stopAdr = startAdr + 3;
+              break;
+            case "SD":
+            case "S.D":
+            case "LD":
+            case "L.D":
+              stopAdr = startAdr + 7;
+              break;
+          }
+          let miss = true;
+          for (let i = 0; i < cacheSize; i = i + blockSize) {
+            if (
+              startAdr >= cache[i].which &&
+              stopAdr <= cache[i + blockSize - 1].which
+            ) {
+              miss = false;
+              break;
+            }
+          }
+          let newCache = [...cache];
+          if (miss) {
+            let noBlocks = cacheSize / blockSize;
+            let blockNumber = startAdr % noBlocks;
+            let startAdrCache = blockNumber * blockSize;
+            let stopFor = startAdr + blockSize;
+            for (let i = startAdr; i < stopFor; i++) {
+              newCache[startAdrCache] = {
+                ...newCache[startAdrCache],
+                value: memory[i].value,
+                which: i,
+              };
+              startAdrCache++;
+            }
+            setCache(newCache);
+          }
+        }
         //if global clk time-exec start time(num before the ...)==time for op
         setSummary((prevSum) =>
           prevSum.map(
