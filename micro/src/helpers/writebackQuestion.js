@@ -1,6 +1,7 @@
 import OperationBuffer from "../buffers/operationBuffer";
 import StoreBuffer from "../buffers/storeBuffer";
 import LoadBuffer from "../buffers/loadBuffer";
+import IntegerRegisterFile from "../table/integerRegisterFile";
 
 const instructionToWriteBack = (
   arrayOfInstructionTags,
@@ -110,8 +111,11 @@ const WritebackQuestion = (
   addBuffer,
   storeBuffer,
   loadBuffer,
+  registerFile,
+  integerRegisterFile,
   summary,
   setRegisterFile,
+  setIntegerRegisterFile,
   setMulBuffer,
   setAddBuffer,
   setStoreBuffer,
@@ -200,50 +204,143 @@ const WritebackQuestion = (
       const indexInSummary = buffer[indexInBuffer]?.indexInSummary;
       const operationString =
         summary[indexInSummary]?.instruction.split(" ")[0];
-      const operation =
-        operationString === "MUL.D"
-          ? "*"
-          : operationString === "DIV.D"
-          ? "/"
-          : operationString === "ADD.D"
-          ? "+"
-          : "-";
-      newValue = `${buffer[indexInBuffer]?.vj}${operation}${buffer[indexInBuffer]?.vk}`;
+      //const operation =
+      //  operationString === "MUL.D"
+      //    ? "*"
+      //    : operationString === "DIV.D"
+      //    ? "/"
+      //    : (operationString === "ADD.D" || operationString === "ADD.S" || operationString === "DADDI")
+      //    ? "+"
+      //    : "-";
+      //newValue = `${buffer[indexInBuffer]?.vj}${operation}${buffer[indexInBuffer]?.vk}`;
+      let valueFirstRegister,
+        valueSecondRegister,
+        valueImmediate,
+        toPutInBuffer;
+      switch (operationString) {
+        case "DADDI":
+          toPutInBuffer = `R${indexInRegisterFile}`;
+          valueFirstRegister = parseInt(
+            integerRegisterFile[
+              parseInt(buffer[indexInBuffer]?.vj?.split("R")[1])
+            ]?.value
+          );
+          valueImmediate = parseInt(buffer[indexInBuffer]?.vk);
+          newValue = valueFirstRegister + valueImmediate;
+          break;
+        case "DSUBI":
+          toPutInBuffer = `R${indexInRegisterFile}`;
+          valueFirstRegister = parseInt(
+            integerRegisterFile[
+              parseInt(buffer[indexInBuffer]?.vj?.split("R")[1])
+            ]?.value
+          );
+          valueImmediate = parseInt(buffer[indexInBuffer]?.vk);
+          newValue = valueFirstRegister - valueImmediate;
+          break;
+        case "MUL.D":
+        case "MUL.S":
+          toPutInBuffer = `F${indexInRegisterFile}`;
+          valueFirstRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
+              ?.value
+          );
+          valueSecondRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
+              ?.value
+          );
+          newValue = valueFirstRegister * valueSecondRegister;
+          break;
+        case "DIV.D":
+        case "DIV.S":
+          toPutInBuffer = `F${indexInRegisterFile}`;
+          valueFirstRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
+              ?.value
+          );
+          valueSecondRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
+              ?.value
+          );
+          newValue = valueFirstRegister / valueSecondRegister;
+          break;
+        case "ADD.D":
+        case "ADD.S":
+          toPutInBuffer = `F${indexInRegisterFile}`;
+          valueFirstRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
+              ?.value
+          );
+          valueSecondRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
+              ?.value
+          );
+          newValue = valueFirstRegister + valueSecondRegister;
+          break;
+        case "SUB.D":
+        case "SUB.S":
+          toPutInBuffer = `F${indexInRegisterFile}`;
+          valueFirstRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
+              ?.value
+          );
+          valueSecondRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
+              ?.value
+          );
+          newValue = valueFirstRegister - valueSecondRegister;
+          break;
+      }
 
       setMulBuffer((prevBuffer) =>
         updateOperationBuffer(
           prevBuffer,
           instructionTag,
-          newValue,
+          toPutInBuffer,
           tagLetter === "M" ? indexInBuffer : null
         )
       );
 
+      //console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
+      //console.log(`toPutInBuffer: ${toPutInBuffer}`);
       setAddBuffer((prevBuffer) =>
         updateOperationBuffer(
           prevBuffer,
           instructionTag,
-          newValue,
+          toPutInBuffer,
           tagLetter === "A" ? indexInBuffer : null
         )
       );
 
+      //check 12-12-2024
       setStoreBuffer((prevBuffer) =>
         prevBuffer.map((record) =>
           record?.q === instructionTag?.tag
-            ? { ...record, v: newValue, q: "" }
+            ? { ...record, v: toPutInBuffer, q: "" }
             : record
         )
       );
 
-      setRegisterFile((prevRegisterFile) =>
-        updateRegisterFile(
-          prevRegisterFile,
-          instructionTag,
-          newValue,
-          indexInRegisterFile
-        )
-      );
+      //check 12-12-2024
+      if (operationString === "DADDI" || operationString === "DSUBI")
+        setIntegerRegisterFile((prevRegisterFile) =>
+          updateRegisterFile(
+            prevRegisterFile,
+            instructionTag,
+            newValue,
+            indexInRegisterFile
+          )
+        );
+      else {
+        setRegisterFile((prevRegisterFile) =>
+          updateRegisterFile(
+            prevRegisterFile,
+            instructionTag,
+            newValue,
+            indexInRegisterFile
+          )
+        );
+      }
 
       setSummary((prevSummary) =>
         updateSummary(prevSummary, indexInSummary, GLOBAL_CLK)

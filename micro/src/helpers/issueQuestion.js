@@ -50,26 +50,20 @@ const IssueQuestion = (
       check = "store-buffer"; //
       break;
     case "LW": //
-      check = "int-load-word";
-      break;
-    case "LD": //
-      check = "int-load-double";
+    case "LD":
+      check = "int-load";
       break;
     case "SW": //
-      check = "int-store-word";
-      break;
     case "SD": //
-      check = "int-store-double";
+      check = "int-store";
       break;
     case "BNE": //
     case "BEQ": //
       check = "int-branch";
       break;
     case "DADDI": //
-      check = "double-add-immediate";
-      break;
     case "DSUBI": //
-      check = "double-subtract-immediate";
+      check = "integer-add-immediate";
       break;
   }
 
@@ -374,13 +368,131 @@ const IssueQuestion = (
         console.log("CHECK IF STALL WORKS");
       }
       break;
-    case "int-load-word":
+    case "int-load":
+      //law fi makan fel loadBuffer
+      if (loadBuffer.some((record) => record.busy === 0)) {
+        const index = loadBuffer.findIndex((record) => record.busy === 0);
+
+        const splitData = SplitData(fileContent[LINE_TXT]);
+        console.log(`splitData: ${splitData}`);
+
+        const registerOutput = splitData[1];
+
+        const newRegisterFile = [...integerRegisterFile];
+        const indexRegisterInRegisterFile = newRegisterFile.findIndex(
+          (register) => register.register === registerOutput
+        );
+
+        const addressInput = splitData[2]; //hena el hashoof law howa medeeny el address alatool wala ageebo men register
+        if (index !== -1) {
+          //place in loadBuffer
+          const newLoadBuffer = [...loadBuffer];
+          newLoadBuffer[index] = {
+            ...newLoadBuffer[index],
+            busy: 1,
+            address: addressInput,
+            indexInRegisterFile: indexRegisterInRegisterFile,
+            indexInSummary: summary.length,
+          };
+          setLoadBuffer(newLoadBuffer);
+
+          //console.log(`loadBuffer issued: ${JSON.stringify(newLoadBuffer)}`);
+
+          const newSummary = [
+            ...summary,
+            new Summary(
+              GLOBAL_ITERATION,
+              fileContent[LINE_TXT],
+              addressInput,
+              addressInput,
+              GLOBAL_CLK,
+              "",
+              -1,
+              `L${index + 1}`
+            ),
+          ];
+          setSummary(newSummary);
+
+          //place in registerFile
+          if (indexRegisterInRegisterFile !== -1)
+            newRegisterFile[indexRegisterInRegisterFile].qi = `L${index + 1}`;
+          setIntegerRegisterFile(newRegisterFile);
+        }
+      } else {
+        SET_LINE_TXT((prev) => prev - 1);
+        console.log("CHECK IF STALL WORKS");
+      }
       break;
-    case "int-load-double":
-      break;
-    case "int-store-word":
-      break;
-    case "int-store-double":
+    case "int-store":
+      //law fi makan fel storeBuffer
+      if (storeBuffer.some((record) => record.busy === 0)) {
+        const index = storeBuffer.findIndex((record) => record.busy === 0);
+
+        const splitData = SplitData(fileContent[LINE_TXT]);
+        console.log(`splitData: ${splitData}`);
+
+        const registerOutput = splitData[1];
+        const addressInput = splitData[2];
+
+        const newRegisterFile = [...integerRegisterFile];
+        const indexRegisterInRegisterFile = newRegisterFile.findIndex(
+          (register) => register.register === registerOutput
+        );
+
+        const qOfRegister = registerFile[indexRegisterInRegisterFile].qi;
+        console.log(`qOfRegister: ${qOfRegister}`);
+        //console.log(`qOfRegister: ${qOfRegister}`);
+
+        let v, q;
+        if (qOfRegister === "0") {
+          v = registerOutput;
+          q = "";
+        } else {
+          v = "";
+          q = qOfRegister;
+        }
+
+        if (index !== -1) {
+          //place in storeBuffer
+          const newStoreBuffer = [...storeBuffer];
+          newStoreBuffer[index] = {
+            ...newStoreBuffer[index],
+            busy: 1,
+            v: v,
+            q: q,
+            address: addressInput,
+            indexInRegisterFile: -1,
+            indexInSummary: summary.length,
+          };
+          setStoreBuffer(newStoreBuffer);
+
+          //console.log(`storeBuffer issued: ${JSON.stringify(newStoreBuffer)}`);
+
+          //place in summary
+          const newSummary = [
+            ...summary,
+            new Summary(
+              GLOBAL_ITERATION,
+              fileContent[LINE_TXT],
+              addressInput,
+              addressInput,
+              GLOBAL_CLK,
+              "",
+              -1,
+              `S${index + 1}`
+            ),
+          ];
+          setSummary(newSummary);
+
+          // //place in registerFile
+          // if (indexRegisterInRegisterFile !== -1)
+          //   newRegisterFile[indexRegisterInRegisterFile].qi = `S${index + 1}`;
+          // setRegisterFile(newRegisterFile);
+        }
+      } else {
+        SET_LINE_TXT((prev) => prev - 1);
+        console.log("CHECK IF STALL WORKS");
+      }
       break;
     case "int-branch":
       const currentInstruction = fileContent[LINE_TXT];
@@ -427,9 +539,89 @@ const IssueQuestion = (
       }
       //console.log(`typeof GLOBAL_ITERATION: ${typeof GLOBAL_ITERATION}`);
       break;
-    case "double-add-immediate":
-      break;
-    case "double-subtract-immediate":
+    case "integer-add-immediate":
+      //check if fthere's empty space in the add buffer (done)
+      //0 in the busy (done)
+      //if yes issue (done)
+      if (addBuffer.some((record) => record.busy === 0)) {
+        const index = addBuffer.findIndex((record) => record.busy === 0);
+
+        const splitData = SplitData(fileContent[LINE_TXT]);
+        //console.log(`splitData: ${splitData}`);
+
+        const register = splitData[2];
+        const immediateString = splitData[3];
+        //console.log(`register: ${register}`);
+        //console.log(`immediateString: ${immediateString}`);
+        //console.log(
+        //  `integerRegisterFile: ${JSON.stringify(integerRegisterFile)}`
+        //);
+        const qOfRegister = integerRegisterFile.find(
+          (registerOn) => registerOn.register === `${register}`
+        )?.qi;
+        //console.log(`qOfRegister: ${qOfRegister}`);
+
+        let vj, qj;
+        if (qOfRegister === "0") {
+          vj = register;
+          qj = "";
+        } else {
+          vj = "";
+          qj = qOfRegister;
+        }
+
+        if (index !== -1) {
+          //write in the add buffer (done)
+          const newAddBuffer = [...addBuffer];
+          newAddBuffer[index] = {
+            ...newAddBuffer[index],
+            op: instructionType,
+            vj: vj,
+            vk: immediateString,
+            qj: qj,
+            qk: "",
+            busy: 1,
+            indexInRegisterFile: parseInt(splitData[1].slice(1)),
+            indexInSummary: summary.length,
+          };
+          setAddBuffer(newAddBuffer);
+
+          //write in summary and write issue with clk (done)
+          const newSummary = [
+            ...summary,
+            new Summary(
+              GLOBAL_ITERATION,
+              fileContent[LINE_TXT],
+              register,
+              immediateString,
+              GLOBAL_CLK,
+              "",
+              -1,
+              `A${index + 1}`
+            ),
+          ];
+          setSummary(newSummary);
+
+          //edit register file (done)
+          const registerOutput = splitData[1];
+          const newRegisterFile = [...integerRegisterFile];
+          const indexRegisterInRegisterFile = newRegisterFile.findIndex(
+            (register) => register.register === registerOutput
+          );
+
+          if (indexRegisterInRegisterFile !== -1)
+            newRegisterFile[indexRegisterInRegisterFile].qi = `A${index + 1}`;
+          setIntegerRegisterFile(newRegisterFile);
+
+          //console.log(`addBuffer: ${JSON.stringify(newAddBuffer)}`);
+          //console.log(`SUMMARY: ${JSON.stringify(newSummary)}`);
+          //console.log(`registerFile: ${JSON.stringify(newRegisterFile)}`);
+        }
+      } else {
+        SET_LINE_TXT((prev) => prev - 1);
+        // console.log("CHECK IF STALL WORKS");
+        //if no space RETURN (stall) (NOT DONE YET)
+      }
       break;
   }
 

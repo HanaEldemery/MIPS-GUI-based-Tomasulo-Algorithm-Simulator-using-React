@@ -21,7 +21,7 @@ const App = () => {
   const memMiss = 3;
   const memHit = 2;
   const addHit = 4;
-  const subHit = 4;
+  const subHit = 9;
   const mulHit = 6;
   const divHit = 6;
 
@@ -80,7 +80,6 @@ const App = () => {
   const [isExecuteStateUpdated, setIsExecuteStateUpdated] = useState(false);
   const [isWritebackStateUpdated, setIsWritebackStateUpdated] = useState(false);
   const [isDone, setIsDone] = useState(false);
-  const [missDone, setMissDone] = useState(false);
 
   const integerToBinary = (integer) => {
     if (integer < 0 || integer > 255) {
@@ -141,7 +140,7 @@ const App = () => {
     for (let i = 0; i < 32; i++) {
       let register = `R${i}`;
       initialIntegerRegisterFile.push(
-        new IntegerRegisterFile(register, `${i}`)
+        new IntegerRegisterFile(register, `${i}`, "0")
       );
     }
     setIntegerRegisterFile(initialIntegerRegisterFile);
@@ -227,8 +226,11 @@ const App = () => {
         addBuffer,
         storeBuffer,
         loadBuffer,
+        registerFile,
+        integerRegisterFile,
         summary,
         setRegisterFile,
+        setIntegerRegisterFile,
         setMulBuffer,
         setAddBuffer,
         setStoreBuffer,
@@ -320,6 +322,7 @@ const App = () => {
         {RenderTable("Integer Register File", integerRegisterFile, [
           "register",
           "value",
+          "qi",
         ])}
       </div>
       <div className="grid grid-cols-2 gap-4">

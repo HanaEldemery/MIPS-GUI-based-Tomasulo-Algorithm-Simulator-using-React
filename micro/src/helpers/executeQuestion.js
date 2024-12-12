@@ -29,6 +29,7 @@ const ExecutionQuestion = (
         )
         .filter((mappedRecord) => mappedRecord !== -1);
 
+      //console.log(`summary[i].location[0]: ${summary[i].location[0]}`);
       //if summary elem has not started execution yet
       let operationTime;
       if (summary[i].location[0] === "M") {
@@ -56,9 +57,18 @@ const ExecutionQuestion = (
       } else if (summary[i].location[0] === "A") {
         operationTime =
           summary[i]?.instruction.split(" ")[0] === "ADD.D" ||
-          summary[i]?.instruction.split(" ")[0] === "ADD.S"
+          summary[i]?.instruction.split(" ")[0] === "ADD.S" ||
+          summary[i]?.instruction.split(" ")[0] === "DADDI"
             ? addHit
             : subHit;
+        console.log(
+          `summary[i]?.instruction.split(" ")[0]: ${
+            summary[i]?.instruction.split(" ")[0]
+          }`
+        );
+        console.log(`operationTime: ${operationTime}`);
+        console.log(`addBuffer[locIndex].qj: ${addBuffer[locIndex].qj}`);
+        console.log(`addBuffer[locIndex].qk: ${addBuffer[locIndex].qj}`);
         if (!addBuffer[locIndex].qj && !addBuffer[locIndex].qk) {
           {
             setSummary((prevSum) =>
@@ -230,7 +240,8 @@ const ExecutionQuestion = (
         case "A":
           if (
             summary[i].instruction.split(" ")[0] === "ADD.D" ||
-            summary[i].instruction.split(" ")[0] === "ADD.S"
+            summary[i].instruction.split(" ")[0] === "ADD.S" ||
+            summary[i].instruction.split(" ")[0] === "DADDI"
           ) {
             timeForOp = addHit;
           } else {
