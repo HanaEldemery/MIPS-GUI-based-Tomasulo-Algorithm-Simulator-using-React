@@ -404,19 +404,19 @@ const WritebackQuestion = (
     case "L":
     case "S": {
       const buffer = tagLetter === "L" ? loadBuffer : storeBuffer;
-      console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
+      //console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
       const indexInBuffer = parseInt(instructionTag?.tag.slice(1)) - 1;
-      console.log(`indexInBuffer: ${indexInBuffer}`);
+      //console.log(`indexInBuffer: ${indexInBuffer}`);
       const indexInRegisterFile = buffer[indexInBuffer].indexInRegisterFile;
-      console.log(`indexInRegisterFile: ${indexInRegisterFile}`);
+      //console.log(`indexInRegisterFile: ${indexInRegisterFile}`);
       const indexInSummary = buffer[indexInBuffer]?.indexInSummary;
       const splitData = summary[indexInSummary]?.instruction?.split(" ");
       const types = splitData[0];
       let startAdr = splitData[2];
 
-      console.log("type: " + types);
-      console.log("startAdr: " + startAdr);
-      console.log("cacheSize: " + cacheSize);
+      //console.log("type: " + types);
+      //console.log("startAdr: " + startAdr);
+      //console.log("cacheSize: " + cacheSize);
       //console.log("cache: " + JSON.stringify(cache));
       //console.log("memory: " + JSON.stringify(memory));
 
@@ -430,10 +430,10 @@ const WritebackQuestion = (
         decFromRegPrev = registerFile[indexInRegisterFile]?.value;
       else decFromRegPrev = integerRegisterFile[indexInRegisterFile]?.value;
 
-      console.log("decFromRegPrev: " + typeof decFromRegPrev);
+      //console.log("decFromRegPrev: " + typeof decFromRegPrev);
 
       let decFromReg = BigInt(decFromRegPrev);
-      console.log("decFromReg: " + decFromReg);
+      //console.log("decFromReg: " + decFromReg);
 
       let stopAdr = -1;
       switch (types) {
@@ -541,10 +541,76 @@ const WritebackQuestion = (
           startAdr++;
         }
         setMemory(newMemory);
-        console.log("newww: " + JSON.stringify(newMemory));
+        //console.log("newww: " + JSON.stringify(newMemory));
       }
 
       //update buffers that need the value returning from the load
+      if (types[0] === "L") {
+        if (types === "LD" || types === "LW") {
+          setIntegerRegisterFile((prevRegisterFile) =>
+            updateRegisterFile(
+              prevRegisterFile,
+              instructionTag,
+              decToReg,
+              indexInRegisterFile
+            )
+          );
+        } else {
+          setRegisterFile((prevRegisterFile) =>
+            updateRegisterFile(
+              prevRegisterFile,
+              instructionTag,
+              decToReg,
+              indexInRegisterFile
+            )
+          );
+        }
+        setMulBuffer((prevBuffer) =>
+          updateOperationBuffer(
+            prevBuffer,
+            instructionTag,
+            decToReg,
+            tagLetter === "M" ? indexInBuffer : null
+          )
+        );
+        setAddBuffer((prevBuffer) =>
+          updateOperationBuffer(
+            prevBuffer,
+            instructionTag,
+            decToReg,
+            tagLetter === "A" ? indexInBuffer : null
+          )
+        );
+        setBranchBuffer((prevBuffer) =>
+          updateOperationBuffer(
+            prevBuffer,
+            instructionTag,
+            decToReg,
+            tagLetter === "B" ? indexInBuffer : null
+          )
+        );
+        setStoreBuffer((prevBuffer) =>
+          prevBuffer.map((record) =>
+            record?.q === instructionTag?.tag
+              ? { ...record, v: decToReg, q: "" }
+              : record
+          )
+        );
+        setLoadBuffer((prevBuffer) =>
+          prevBuffer.map((record, index) =>
+            index === indexInBuffer ? new LoadBuffer() : record
+          )
+        );
+        setSummary((prevSummary) =>
+          updateSummary(prevSummary, indexInSummary, GLOBAL_CLK)
+        );
+      } else {
+        setStoreBuffer((prevBuffer) =>
+          prevBuffer.map((record, index) =>
+            index === indexInBuffer ? new StoreBuffer() : record
+          )
+        );
+      }
       break;
     }
     case "B":
