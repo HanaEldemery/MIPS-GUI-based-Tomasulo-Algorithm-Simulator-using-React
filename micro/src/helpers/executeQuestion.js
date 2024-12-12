@@ -7,15 +7,21 @@ const ExecutionQuestion = (
   addBuffer,
   mulBuffer,
   storeBuffer,
+  branchBuffer,
   setCache,
   setSummary,
   memMiss,
   memHit,
   addHit,
   subHit,
+  integerAddHit,
+  integerSubHit,
+  integerBranchHit,
   mulHit,
   divHit,
-  GLOBAL_CLK
+  GLOBAL_CLK,
+  SET_LINE_TXT,
+  objectLoopNameAndIndex
 ) => {
   for (let i = 0; i < summary.length; i++) {
     //loop over all the summary
@@ -56,19 +62,23 @@ const ExecutionQuestion = (
         }
       } else if (summary[i].location[0] === "A") {
         operationTime =
-          summary[i]?.instruction.split(" ")[0] === "ADD.D" ||
-          summary[i]?.instruction.split(" ")[0] === "ADD.S" ||
-          summary[i]?.instruction.split(" ")[0] === "DADDI"
+          summary[i]?.instruction?.split(" ")[0] === "ADD.D" ||
+          summary[i]?.instruction?.split(" ")[0] === "ADD.S"
             ? addHit
+            : summary[i]?.instruction?.split(" ")[0] === "DADDI"
+            ? integerAddHit
+            : summary[i]?.instruction?.split(" ")[0] === "DSUBI"
+            ? integerSubHit
             : subHit;
-        console.log(
-          `summary[i]?.instruction.split(" ")[0]: ${
-            summary[i]?.instruction.split(" ")[0]
-          }`
-        );
-        console.log(`operationTime: ${operationTime}`);
-        console.log(`addBuffer[locIndex].qj: ${addBuffer[locIndex].qj}`);
-        console.log(`addBuffer[locIndex].qk: ${addBuffer[locIndex].qj}`);
+
+        //console.log(
+        //  `summary[i]?.instruction.split(" ")[0]: ${
+        //    summary[i]?.instruction.split(" ")[0]
+        //  }`
+        //);
+        //console.log(`operationTime: ${operationTime}`);
+        //console.log(`addBuffer[locIndex].qj: ${addBuffer[locIndex].qj}`);
+        //console.log(`addBuffer[locIndex].qk: ${addBuffer[locIndex].qj}`);
         if (!addBuffer[locIndex].qj && !addBuffer[locIndex].qk) {
           {
             setSummary((prevSum) =>
@@ -162,6 +172,22 @@ const ExecutionQuestion = (
             );
           }
         }
+      } else if (summary[i].location[0] === "B") {
+        operationTime = integerBranchHit;
+
+        if (!branchBuffer[locIndex].qj && !branchBuffer[locIndex].qk) {
+          {
+            setSummary((prevSum) =>
+              prevSum.map((item, index) =>
+                index === i
+                  ? operationTime === 1
+                    ? { ...item, executionComplete: `${GLOBAL_CLK}` }
+                    : { ...item, executionComplete: `${GLOBAL_CLK}...` }
+                  : item
+              )
+            );
+          }
+        }
       }
     }
   }
@@ -240,13 +266,17 @@ const ExecutionQuestion = (
         case "A":
           if (
             summary[i].instruction.split(" ")[0] === "ADD.D" ||
-            summary[i].instruction.split(" ")[0] === "ADD.S" ||
-            summary[i].instruction.split(" ")[0] === "DADDI"
-          ) {
+            summary[i].instruction.split(" ")[0] === "ADD.S"
+          )
             timeForOp = addHit;
-          } else {
-            timeForOp = subHit;
-          }
+          else if (summary[i].instruction.split(" ")[0] === "DADDI")
+            timeForOp = integerAddHit;
+          else if (summary[i].instruction.split(" ")[0] === "DSUBI")
+            timeForOp = integerSubHit;
+          else timeForOp = subHit;
+          break;
+        case "B":
+          timeForOp = integerBranchHit;
           break;
       }
 

@@ -110,6 +110,7 @@ const WritebackQuestion = (
   mulBuffer,
   addBuffer,
   storeBuffer,
+  branchBuffer,
   loadBuffer,
   registerFile,
   integerRegisterFile,
@@ -120,7 +121,11 @@ const WritebackQuestion = (
   setAddBuffer,
   setStoreBuffer,
   setLoadBuffer,
-  setSummary
+  setSummary,
+  SET_STALLING,
+  SET_LINE_TXT,
+  SET_GLOBAL_ITERATION,
+  objectLoopNameAndIndex
 ) => {
   //arrayOfInstructionTags ==> loop on (summary) and check for each record if anything after ... && writeBack === -1)
   //-----------//
@@ -189,6 +194,7 @@ const WritebackQuestion = (
   //console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
 
   const tagLetter = instructionTag?.tag[0];
+  console.log();
 
   //console.log(`tagLetter: ${tagLetter}`);
 
@@ -435,6 +441,71 @@ const WritebackQuestion = (
       );
       break;
     }
+    case "B":
+      const buffer = branchBuffer;
+      const indexInBuffer = parseInt(instructionTag?.tag.slice(1)) - 1;
+      const indexInRegisterFile = buffer[indexInBuffer]?.indexInRegisterFile;
+      const indexInSummary = buffer[indexInBuffer]?.indexInSummary;
+      const operationString =
+        summary[indexInSummary]?.instruction.split(" ")[0];
+
+      //console.log(`operationString: ${operationString}`);
+
+      const whichLoop = summary[indexInSummary]?.instruction.split(" ")[3];
+      let loopToIndex;
+      if (/^\d+$/.test(whichLoop)) {
+        //it's a string of numbers
+        loopToIndex = parseInt(whichLoop / 32);
+      } else {
+        //it's an alphabetical string or contains non-digit characters
+        loopToIndex = parseInt(
+          objectLoopNameAndIndex.find((record) => record?.name === whichLoop)
+            .index
+        );
+      }
+
+      const firstRegister = summary[indexInSummary]?.instruction.split(" ")[1];
+      const secondRegister = summary[indexInSummary]?.instruction.split(" ")[2];
+
+      console.log(`firstRegister: ${firstRegister}`);
+      console.log(`secondRegister: ${secondRegister}`);
+
+      const firstRegisterValue = parseInt(
+        integerRegisterFile.find(
+          (register) => register?.register === firstRegister
+        ).value
+      );
+      const secondRegisterValue = parseInt(
+        integerRegisterFile.find(
+          (register) => register?.register === secondRegister
+        ).value
+      );
+      console.log(`firstRegisterValue: ${firstRegisterValue}`);
+      console.log(`secondRegisterValue: ${secondRegisterValue}`);
+
+      console.log(`loopToIndex: ${loopToIndex - 1}`);
+      if (
+        operationString === "BNE" &&
+        firstRegisterValue !== secondRegisterValue
+      ) {
+        SET_LINE_TXT(loopToIndex - 1);
+        SET_GLOBAL_ITERATION((prev) => prev + 1);
+      }
+
+      if (
+        operationString === "BEQ" &&
+        firstRegisterValue === secondRegisterValue
+      ) {
+        SET_LINE_TXT(loopToIndex - 1);
+        SET_GLOBAL_ITERATION((prev) => prev + 1);
+      }
+
+      setSummary((prevSummary) =>
+        updateSummary(prevSummary, indexInSummary, GLOBAL_CLK)
+      );
+
+      SET_STALLING(false);
+      break;
   }
 };
 

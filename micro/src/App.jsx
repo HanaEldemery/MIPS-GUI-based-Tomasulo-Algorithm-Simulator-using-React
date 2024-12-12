@@ -22,6 +22,9 @@ const App = () => {
   const memHit = 2;
   const addHit = 4;
   const subHit = 9;
+  const integerAddHit = 2;
+  const integerSubHit = 1;
+  const integerBranchHit = 3;
   const mulHit = 6;
   const divHit = 6;
 
@@ -71,6 +74,7 @@ const App = () => {
   const [addBuffer, setAddBuffer] = useState([]);
   const [loadBuffer, setLoadBuffer] = useState([]);
   const [storeBuffer, setStoreBuffer] = useState([]);
+  const [branchBuffer, setBranchBuffer] = useState([]);
   const [registerFile, setRegisterFile] = useState([]);
   const [integerRegisterFile, setIntegerRegisterFile] = useState([]);
   const [summary, setSummary] = useState([]);
@@ -79,6 +83,7 @@ const App = () => {
 
   const [isExecuteStateUpdated, setIsExecuteStateUpdated] = useState(false);
   const [isWritebackStateUpdated, setIsWritebackStateUpdated] = useState(false);
+  const [STALLING, SET_STALLING] = useState(false);
   const [isDone, setIsDone] = useState(false);
 
   const integerToBinary = (integer) => {
@@ -116,6 +121,8 @@ const App = () => {
       initialAddBuffer.push(new OperationBuffer());
     }
     setAddBuffer(initialAddBuffer);
+
+    setBranchBuffer([new OperationBuffer()]);
 
     const initialLoadBuffer = [];
     for (let i = 0; i < 3; i++) {
@@ -161,7 +168,11 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    if (fileContent?.length > 0 && LINE_TXT < fileContent?.length) {
+    if (
+      fileContent?.length > 0 &&
+      LINE_TXT < fileContent?.length &&
+      !STALLING
+    ) {
       IssueQuestion(
         fileContent,
         objectLoopNameAndIndex,
@@ -174,16 +185,19 @@ const App = () => {
         addBuffer,
         loadBuffer,
         storeBuffer,
+        branchBuffer,
         summary,
         setMulBuffer,
         setAddBuffer,
         setLoadBuffer,
         setStoreBuffer,
+        setBranchBuffer,
         SET_LINE_TXT,
         setSummary,
         setRegisterFile,
         setIntegerRegisterFile,
-        SET_GLOBAL_ITERATION
+        SET_GLOBAL_ITERATION,
+        SET_STALLING
       );
 
       handleExecuteStateUpdate();
@@ -201,15 +215,21 @@ const App = () => {
         addBuffer,
         mulBuffer,
         storeBuffer,
+        branchBuffer,
         setCache,
         setSummary,
         memMiss,
         memHit,
         addHit,
         subHit,
+        integerAddHit,
+        integerSubHit,
+        integerBranchHit,
         mulHit,
         divHit,
-        GLOBAL_CLK
+        GLOBAL_CLK,
+        SET_LINE_TXT,
+        objectLoopNameAndIndex
       );
 
       handleWritebackStateUpdate();
@@ -225,6 +245,7 @@ const App = () => {
         mulBuffer,
         addBuffer,
         storeBuffer,
+        branchBuffer,
         loadBuffer,
         registerFile,
         integerRegisterFile,
@@ -235,7 +256,11 @@ const App = () => {
         setAddBuffer,
         setStoreBuffer,
         setLoadBuffer,
-        setSummary
+        setSummary,
+        SET_STALLING,
+        SET_LINE_TXT,
+        SET_GLOBAL_ITERATION,
+        objectLoopNameAndIndex
       );
 
       setIsWritebackStateUpdated(false);
@@ -274,7 +299,15 @@ const App = () => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Buffer Status</h1>
-
+      {RenderTable("Branch Buffer", branchBuffer, [
+        "busy",
+        "op",
+        "vj",
+        "vk",
+        "qj",
+        "qk",
+        "a",
+      ])}
       <div className="grid grid-cols-2 gap-4">
         {RenderTable("Multiply Buffer", mulBuffer, [
           "busy",

@@ -13,16 +13,19 @@ const IssueQuestion = (
   addBuffer,
   loadBuffer,
   storeBuffer,
+  branchBuffer,
   summary,
   setMulBuffer,
   setAddBuffer,
   setLoadBuffer,
   setStoreBuffer,
+  setBranchBuffer,
   SET_LINE_TXT,
   setSummary,
   setRegisterFile,
   setIntegerRegisterFile,
-  SET_GLOBAL_ITERATION
+  SET_GLOBAL_ITERATION,
+  SET_STALLING
 ) => {
   const instructionType = SplitData(fileContent[LINE_TXT])[0];
   //console.log(`instructionType: ${instructionType}`);
@@ -429,7 +432,7 @@ const IssueQuestion = (
         const index = storeBuffer.findIndex((record) => record.busy === 0);
 
         const splitData = SplitData(fileContent[LINE_TXT]);
-        console.log(`splitData: ${splitData}`);
+        //console.log(`splitData: ${splitData}`);
 
         const registerOutput = splitData[1];
         const addressInput = splitData[2];
@@ -440,7 +443,7 @@ const IssueQuestion = (
         );
 
         const qOfRegister = registerFile[indexRegisterInRegisterFile].qi;
-        console.log(`qOfRegister: ${qOfRegister}`);
+        //console.log(`qOfRegister: ${qOfRegister}`);
         //console.log(`qOfRegister: ${qOfRegister}`);
 
         let v, q;
@@ -495,49 +498,90 @@ const IssueQuestion = (
       }
       break;
     case "int-branch":
-      const currentInstruction = fileContent[LINE_TXT];
-      const splitInstruction = currentInstruction.split(" ");
-      const whichLoop = splitInstruction[3];
-      //console.log(`whichLoop: ${whichLoop}`);
-      //console.log(`whichLoop type: ${typeof whichLoop}`);
-      const loopToIndex = parseInt(
-        objectLoopNameAndIndex.find((record) => record?.name === whichLoop)
-          .index
-      );
-      //console.log(`loopToIndex: ${typeof loopToIndex}`);
-      const firstRegister = splitInstruction[1];
-      const secondRegister = splitInstruction[2];
-      //console.log(`firstRegister: ${firstRegister}`);
-      //console.log(`secondRegister: ${secondRegister}`);
-      const firstRegisterValue = parseInt(
-        integerRegisterFile.find(
-          (register) => register?.register === firstRegister
-        ).value
-      );
-      const secondRegisterValue = parseInt(
-        integerRegisterFile.find(
-          (register) => register?.register === secondRegister
-        ).value
-      );
-      //console.log(`firstRegisterValue: ${firstRegisterValue}`);
-      //console.log(`secondRegisterValue: ${secondRegisterValue}`);
+      //console.log(`branchBuffer: ${JSON.stringify(branchBuffer)}`);
+      if (branchBuffer.some((record) => record.busy === 0)) {
+        const index = branchBuffer.findIndex((record) => record.busy === 0);
 
-      if (
-        instructionType === "BNE" &&
-        firstRegisterValue !== secondRegisterValue
-      ) {
-        SET_LINE_TXT(loopToIndex - 1);
-        SET_GLOBAL_ITERATION((prev) => prev + 1);
-      }
+        const currentInstruction = fileContent[LINE_TXT];
+        const splitInstruction = currentInstruction.split(" ");
+        //console.log(`splitInstruction: ${splitInstruction}`);
+        //BNE,R1,R2,LOOP
 
-      if (
-        instructionType === "BEQ" &&
-        firstRegisterValue === secondRegisterValue
-      ) {
-        SET_LINE_TXT(loopToIndex - 1);
-        SET_GLOBAL_ITERATION((prev) => prev + 1);
+        const registerOne = splitInstruction[1];
+        const registerTwo = splitInstruction[2];
+
+        //console.log(`registerOne: ${registerOne}`); //R1
+        //console.log(`registerTwo: ${registerTwo}`); //R2
+
+        const qOfRegisterOne = integerRegisterFile.find(
+          (register) => register.register === `${registerOne}`
+        )?.qi;
+        const qOfRegisterTwo = integerRegisterFile.find(
+          (register) => register.register === `${registerTwo}`
+        )?.qi;
+
+        //console.log(`qOfRegisterOne: ${qOfRegisterOne}`);
+        //console.log(`qOfRegisterTwo: ${qOfRegisterTwo}`);
+
+        //console.log(`instructionType: ${instructionType}`);
+        //BNE
+
+        let vj, vk, qj, qk;
+        if (qOfRegisterOne === "0") {
+          vj = registerOne;
+          qj = "";
+        } else {
+          vj = "";
+          qj = qOfRegisterOne;
+        }
+        if (qOfRegisterTwo === "0") {
+          vk = registerTwo;
+          qk = "";
+        } else {
+          vk = "";
+          qk = qOfRegisterTwo;
+        }
+
+        //console.log(`index: ${index}`); //0
+        if (index !== -1) {
+          //write in the add buffer (done)
+          const newBranchBuffer = [...branchBuffer];
+          newBranchBuffer[index] = {
+            ...newBranchBuffer[index],
+            op: instructionType,
+            vj: vj,
+            vk: vk,
+            qj: qj,
+            qk: qk,
+            busy: 1,
+            indexInRegisterFile: -1,
+            indexInSummary: summary.length,
+          };
+          //console.log(`newBranchBuffer: ${JSON.stringify(newBranchBuffer)}`);
+          setBranchBuffer(newBranchBuffer);
+
+          //write in summary and write issue with clk (done)
+          const newSummary = [
+            ...summary,
+            new Summary(
+              GLOBAL_ITERATION,
+              fileContent[LINE_TXT],
+              registerOne,
+              registerTwo,
+              GLOBAL_CLK,
+              "",
+              -1,
+              `B${index + 1}`
+            ),
+          ];
+          setSummary(newSummary);
+        }
+        SET_STALLING(true);
+      } else {
+        SET_LINE_TXT((prev) => prev - 1);
+        // console.log("CHECK IF STALL WORKS");
+        //if no space RETURN (stall) (NOT DONE YET)
       }
-      //console.log(`typeof GLOBAL_ITERATION: ${typeof GLOBAL_ITERATION}`);
       break;
     case "integer-add-immediate":
       //check if fthere's empty space in the add buffer (done)
