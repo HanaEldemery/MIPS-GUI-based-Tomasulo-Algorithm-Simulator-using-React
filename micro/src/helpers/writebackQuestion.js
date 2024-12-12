@@ -74,6 +74,11 @@ const updateOperationBuffer = (
   operationIndex = null
 ) =>
   buffer.map((record, index) => {
+    if (
+      record?.qk === instructionTag?.tag &&
+      record?.qj === instructionTag?.tag
+    )
+      return { ...record, vj: newValue, vk: newValue, qk: "", qj: "" };
     if (record?.qj === instructionTag?.tag)
       return { ...record, vj: newValue, qj: "" };
     if (record?.qk === instructionTag?.tag)
@@ -125,7 +130,8 @@ const WritebackQuestion = (
   SET_STALLING,
   SET_LINE_TXT,
   SET_GLOBAL_ITERATION,
-  objectLoopNameAndIndex
+  objectLoopNameAndIndex,
+  setBranchBuffer
 ) => {
   //arrayOfInstructionTags ==> loop on (summary) and check for each record if anything after ... && writeBack === -1)
   //-----------//
@@ -194,7 +200,6 @@ const WritebackQuestion = (
   //console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
 
   const tagLetter = instructionTag?.tag[0];
-  console.log();
 
   //console.log(`tagLetter: ${tagLetter}`);
 
@@ -315,6 +320,16 @@ const WritebackQuestion = (
           instructionTag,
           toPutInBuffer,
           tagLetter === "A" ? indexInBuffer : null
+        )
+      );
+
+      //check this 12-12-2024
+      setBranchBuffer((prevBuffer) =>
+        updateOperationBuffer(
+          prevBuffer,
+          instructionTag,
+          toPutInBuffer,
+          tagLetter === "B" ? indexInBuffer : null
         )
       );
 
@@ -467,8 +482,8 @@ const WritebackQuestion = (
       const firstRegister = summary[indexInSummary]?.instruction.split(" ")[1];
       const secondRegister = summary[indexInSummary]?.instruction.split(" ")[2];
 
-      console.log(`firstRegister: ${firstRegister}`);
-      console.log(`secondRegister: ${secondRegister}`);
+      //console.log(`firstRegister: ${firstRegister}`);
+      //console.log(`secondRegister: ${secondRegister}`);
 
       const firstRegisterValue = parseInt(
         integerRegisterFile.find(
@@ -483,22 +498,22 @@ const WritebackQuestion = (
       console.log(`firstRegisterValue: ${firstRegisterValue}`);
       console.log(`secondRegisterValue: ${secondRegisterValue}`);
 
-      console.log(`loopToIndex: ${loopToIndex - 1}`);
+      //console.log(`loopToIndex: ${loopToIndex}`);
       if (
         operationString === "BNE" &&
         firstRegisterValue !== secondRegisterValue
       ) {
         SET_LINE_TXT(loopToIndex - 1);
         SET_GLOBAL_ITERATION((prev) => prev + 1);
-      }
-
-      if (
+      } else if (
         operationString === "BEQ" &&
         firstRegisterValue === secondRegisterValue
       ) {
         SET_LINE_TXT(loopToIndex - 1);
         SET_GLOBAL_ITERATION((prev) => prev + 1);
       }
+
+      setBranchBuffer([new OperationBuffer()]);
 
       setSummary((prevSummary) =>
         updateSummary(prevSummary, indexInSummary, GLOBAL_CLK)

@@ -260,20 +260,25 @@ const App = () => {
         SET_STALLING,
         SET_LINE_TXT,
         SET_GLOBAL_ITERATION,
-        objectLoopNameAndIndex
+        objectLoopNameAndIndex,
+        setBranchBuffer
       );
 
       setIsWritebackStateUpdated(false);
     }
   }, [isWritebackStateUpdated, GLOBAL_CLK]);
 
+  console.log(`STALLING: ${STALLING ? "true" : "false"}`);
+
   const checkIfDone = () => {
     const summaryFilteredByWriteback = summary.filter(
       (record) => record.writeBack !== -1
     );
     if (
+      LINE_TXT >= fileContent.length - 1 &&
       summaryFilteredByWriteback.length === summary.length &&
-      GLOBAL_CLK !== 0
+      GLOBAL_CLK !== 0 &&
+      !STALLING
     ) {
       setIsDone(true);
       SET_GLOBAL_CLK((prev) => prev - 1);
@@ -283,18 +288,18 @@ const App = () => {
   const handleOnNextClockCycleClick = () => {
     SET_GLOBAL_CLK((prev) => prev + 1);
     checkIfDone();
-    if (fileContent?.length > LINE_TXT) SET_LINE_TXT((prev) => prev + 1);
+    if (fileContent?.length > LINE_TXT && !STALLING)
+      SET_LINE_TXT((prev) => prev + 1);
     console.log(`GLOBAL_ITERATION: ${GLOBAL_ITERATION}`);
   };
 
-  // console.log(
-  //   "================================================================"
-  // );
-  // console.log(mulBuffer);
-  // console.log(LINE_TXT);
-  // console.log(
-  //   "================================================================"
-  // );
+  console.log(
+    "================================================================"
+  );
+  console.log(LINE_TXT);
+  console.log(
+    "================================================================"
+  );
 
   return (
     <div className="p-6">
