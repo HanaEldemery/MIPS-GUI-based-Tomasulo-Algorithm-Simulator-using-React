@@ -1,3 +1,12 @@
+import OperationBuffer from "../buffers/operationBuffer";
+
+const updateSummary = (summary, indexInSummary, GLOBAL_CLK) =>
+  summary.map((record, index) => {
+    if (index === indexInSummary)
+      return { ...record, writeBack: GLOBAL_CLK, location: "" };
+    return record;
+  });
+
 const ExecutionQuestion = (
   summary,
   cache,
@@ -21,7 +30,11 @@ const ExecutionQuestion = (
   divHit,
   GLOBAL_CLK,
   SET_LINE_TXT,
-  objectLoopNameAndIndex
+  objectLoopNameAndIndex,
+  setBranchBuffer,
+  integerRegisterFile,
+  SET_GLOBAL_ITERATION,
+  SET_STALLING
 ) => {
   for (let i = 0; i < summary.length; i++) {
     //loop over all the summary
@@ -218,7 +231,7 @@ const ExecutionQuestion = (
           //     locationLoadsStoresInSummary
           //   )}`
           // );
-          console.log("cache abl ma3raf hit or miss: " + JSON.stringify(cache));
+          //console.log("cache abl ma3raf hit or miss: " + JSON.stringify(cache));
           const startAdr = parseInt(summary[i].instruction.split(" ")[2]);
           const type = summary[i].instruction.split(" ")[0];
           let stopAdr = -1;
@@ -294,6 +307,75 @@ const ExecutionQuestion = (
           1 ===
         timeForOp
       ) {
+        // if (summary[i].location[0] === "B") {
+        //   const buffer = branchBuffer;
+        //   const indexInBuffer = 0;
+        //   const indexInRegisterFile =
+        //     buffer[indexInBuffer]?.indexInRegisterFile;
+        //   const indexInSummary = buffer[indexInBuffer]?.indexInSummary;
+        //   const operationString =
+        //     summary[indexInSummary]?.instruction.split(" ")[0];
+
+        //   console.log(`operationString: ${operationString}`);
+
+        //   const whichLoop = summary[indexInSummary]?.instruction.split(" ")[3];
+        //   let loopToIndex;
+        //   if (/^\d+$/.test(whichLoop)) {
+        //     //it's a string of numbers
+        //     loopToIndex = parseInt(whichLoop / 32);
+        //   } else {
+        //     //it's an alphabetical string or contains non-digit characters
+        //     loopToIndex = parseInt(
+        //       objectLoopNameAndIndex.find(
+        //         (record) => record?.name === whichLoop
+        //       ).index
+        //     );
+        //   }
+
+        //   const firstRegister =
+        //     summary[indexInSummary]?.instruction.split(" ")[1];
+        //   const secondRegister =
+        //     summary[indexInSummary]?.instruction.split(" ")[2];
+
+        //   //console.log(`firstRegister: ${firstRegister}`);
+        //   //console.log(`secondRegister: ${secondRegister}`);
+
+        //   const firstRegisterValue = parseInt(
+        //     integerRegisterFile.find(
+        //       (register) => register?.register === firstRegister
+        //     ).value
+        //   );
+        //   const secondRegisterValue = parseInt(
+        //     integerRegisterFile.find(
+        //       (register) => register?.register === secondRegister
+        //     ).value
+        //   );
+        //   //console.log(`firstRegisterValue: ${firstRegisterValue}`);
+        //   //console.log(`secondRegisterValue: ${secondRegisterValue}`);
+
+        //   //console.log(`loopToIndex: ${loopToIndex}`);
+        //   if (
+        //     operationString === "BNE" &&
+        //     firstRegisterValue !== secondRegisterValue
+        //   ) {
+        //     SET_LINE_TXT(loopToIndex - 1);
+        //     SET_GLOBAL_ITERATION((prev) => prev + 1);
+        //   } else if (
+        //     operationString === "BEQ" &&
+        //     firstRegisterValue === secondRegisterValue
+        //   ) {
+        //     SET_LINE_TXT(loopToIndex - 1);
+        //     SET_GLOBAL_ITERATION((prev) => prev + 1);
+        //   }
+
+        //   setBranchBuffer([new OperationBuffer()]);
+
+        //   // setSummary((prevSummary) =>
+        //   //   updateSummary(prevSummary, indexInSummary, GLOBAL_CLK)
+        //   // );
+
+        //   SET_STALLING(false);
+        // }
         if (summary[i].location[0] === "L" || summary[i].location[0] === "S") {
           const startAdr = parseInt(summary[i].instruction.split(" ")[2]);
           const type = summary[i].instruction.split(" ")[0];

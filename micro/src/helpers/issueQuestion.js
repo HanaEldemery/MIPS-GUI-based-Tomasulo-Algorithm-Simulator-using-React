@@ -377,7 +377,7 @@ const IssueQuestion = (
         const index = loadBuffer.findIndex((record) => record.busy === 0);
 
         const splitData = SplitData(fileContent[LINE_TXT]);
-        console.log(`splitData: ${splitData}`);
+        //console.log(`splitData: ${splitData}`);
 
         const registerOutput = splitData[1];
 

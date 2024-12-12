@@ -229,7 +229,11 @@ const App = () => {
         divHit,
         GLOBAL_CLK,
         SET_LINE_TXT,
-        objectLoopNameAndIndex
+        objectLoopNameAndIndex,
+        setBranchBuffer,
+        integerRegisterFile,
+        SET_GLOBAL_ITERATION,
+        SET_STALLING
       );
 
       handleWritebackStateUpdate();
@@ -261,14 +265,19 @@ const App = () => {
         SET_LINE_TXT,
         SET_GLOBAL_ITERATION,
         objectLoopNameAndIndex,
-        setBranchBuffer
+        setBranchBuffer,
+        cache,
+        cacheSize,
+        memory,
+        setMemory,
+        setCache
       );
 
       setIsWritebackStateUpdated(false);
     }
   }, [isWritebackStateUpdated, GLOBAL_CLK]);
 
-  console.log(`STALLING: ${STALLING ? "true" : "false"}`);
+  //console.log(`STALLING: ${STALLING ? "true" : "false"}`);
 
   const checkIfDone = () => {
     const summaryFilteredByWriteback = summary.filter(
@@ -290,16 +299,16 @@ const App = () => {
     checkIfDone();
     if (fileContent?.length > LINE_TXT && !STALLING)
       SET_LINE_TXT((prev) => prev + 1);
-    console.log(`GLOBAL_ITERATION: ${GLOBAL_ITERATION}`);
+    //console.log(`GLOBAL_ITERATION: ${GLOBAL_ITERATION}`);
   };
 
-  console.log(
-    "================================================================"
-  );
-  console.log(LINE_TXT);
-  console.log(
-    "================================================================"
-  );
+  //console.log(
+  //  "================================================================"
+  //);
+  //console.log(LINE_TXT);
+  //console.log(
+  //  "================================================================"
+  //);
 
   return (
     <div className="p-6">

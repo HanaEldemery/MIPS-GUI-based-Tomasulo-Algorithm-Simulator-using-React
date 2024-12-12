@@ -2,7 +2,35 @@ import OperationBuffer from "../buffers/operationBuffer";
 import StoreBuffer from "../buffers/storeBuffer";
 import LoadBuffer from "../buffers/loadBuffer";
 import IntegerRegisterFile from "../table/integerRegisterFile";
+const integerToBinary = (integer) => {
+  if (integer < 0 || integer > 255) {
+    throw new Error("Input must be between 0 and 255 for 8-bit binary.");
+  }
 
+  let binary = "";
+  while (integer > 0) {
+    binary = `${integer % 2}${binary}`;
+    integer = Math.floor(integer / 2);
+  }
+
+  return binary.padStart(8, "0");
+};
+
+function binaryToDecimal(binaryString) {
+  if (!/^[01]+$/.test(binaryString)) {
+    throw new Error("Input must be a string of 0s and 1s");
+  }
+
+  return BigInt("0b" + binaryString);
+}
+
+function decimalToBinary(number) {
+  if (typeof number !== "number" && typeof number !== "bigint") {
+    throw new Error("Input must be an integer or BigInt");
+  }
+
+  return number.toString(2);
+}
 const instructionToWriteBack = (
   arrayOfInstructionTags,
   mulBuffer,
@@ -131,7 +159,12 @@ const WritebackQuestion = (
   SET_LINE_TXT,
   SET_GLOBAL_ITERATION,
   objectLoopNameAndIndex,
-  setBranchBuffer
+  setBranchBuffer,
+  cache,
+  cacheSize,
+  memory,
+  setMemory,
+  setCache
 ) => {
   //arrayOfInstructionTags ==> loop on (summary) and check for each record if anything after ... && writeBack === -1)
   //-----------//
@@ -181,7 +214,7 @@ const WritebackQuestion = (
       .map((filteredRecord) => filteredRecord?.location);
 
   if (!arrayOfInstructionTags?.length)
-    return console.log("nothing ready for writeback");
+    return console.log("" /*"nothing ready for writeback"*/);
 
   //console.log(`arrayOfInstructionTags: ${arrayOfInstructionTags}`);
 
@@ -371,94 +404,153 @@ const WritebackQuestion = (
     case "L":
     case "S": {
       const buffer = tagLetter === "L" ? loadBuffer : storeBuffer;
+      console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
       const indexInBuffer = parseInt(instructionTag?.tag.slice(1)) - 1;
+      console.log(`indexInBuffer: ${indexInBuffer}`);
       const indexInRegisterFile = buffer[indexInBuffer].indexInRegisterFile;
+      console.log(`indexInRegisterFile: ${indexInRegisterFile}`);
       const indexInSummary = buffer[indexInBuffer]?.indexInSummary;
-      const operationString =
-        summary[indexInSummary]?.instruction.split(" ")[0];
-      const address = summary[indexInSummary]?.instruction.split(" ")[2];
-      const type = operationString.includes(".")
-        ? operationString.split(".")[1]
-        : operationString.slice(1);
-      newValue = `mem[${address}]`;
+      const splitData = summary[indexInSummary]?.instruction?.split(" ");
+      const types = splitData[0];
+      let startAdr = splitData[2];
 
-      if (type === "S")
-        tagLetter === "L"
-          ? console.log("load-single")
-          : console.log("store-single");
-      else if (type === "D")
-        tagLetter === "L"
-          ? console.log("load-double")
-          : console.log("store-double");
+      console.log("type: " + types);
+      console.log("startAdr: " + startAdr);
+      console.log("cacheSize: " + cacheSize);
+      //console.log("cache: " + JSON.stringify(cache));
+      //console.log("memory: " + JSON.stringify(memory));
 
-      //non floating point should not enter here
+      let decFromRegPrev;
+      if (
+        types === "L.S" ||
+        types === "L.D" ||
+        types === "S.S" ||
+        types === "S.D"
+      )
+        decFromRegPrev = registerFile[indexInRegisterFile]?.value;
+      else decFromRegPrev = integerRegisterFile[indexInRegisterFile]?.value;
 
-      //update the loadBuffer/storeBuffer
-      setLoadBuffer((prevBuffer) => {
-        //console.log(`loadBuffer before: ${JSON.stringify(prevBuffer)}`);
-        const updatedBuffer = prevBuffer.map((record, index) => {
-          if (index === indexInBuffer && tagLetter === "L")
-            return new LoadBuffer();
-          return record;
-        });
-        //console.log(`loadBuffer after: ${JSON.stringify(updatedBuffer)}`);
-        return updatedBuffer;
-      });
+      console.log("decFromRegPrev: " + typeof decFromRegPrev);
 
-      setStoreBuffer((prevBuffer) => {
-        //console.log(`storeBuffer before: ${JSON.stringify(prevBuffer)}`);
-        const updatedBuffer = prevBuffer.map((record, index) => {
-          //console.log(`instructionTag?.tag: ${instructionTag?.tag}`);
-          //console.log(`record?.q: ${record?.q}`);
-          if (record?.q === instructionTag?.tag)
-            return { ...record, v: newValue, q: "" };
-          if (index === indexInBuffer && tagLetter === "S")
-            return new StoreBuffer();
-          return record;
-        });
-        //console.log(`storeBuffer after: ${JSON.stringify(updatedBuffer)}`);
-        return updatedBuffer;
-      });
+      let decFromReg = BigInt(decFromRegPrev);
+      console.log("decFromReg: " + decFromReg);
 
-      //in any other buffer that needs it, go from qj/qk to vj/vk
-      setAddBuffer((prevBuffer) =>
-        updateOperationBuffer(prevBuffer, instructionTag, newValue, null)
-      );
+      let stopAdr = -1;
+      switch (types) {
+        case "LW":
+        case "L.S":
+        case "SW":
+        case "S.S":
+          stopAdr = startAdr + 3;
+          break;
+        case "LD":
+        case "L.D":
+        case "SD":
+        case "S.D":
+          stopAdr = startAdr + 7;
+          break;
+      }
+      //FEL WRITE BACK
+      //law hit haty el NEEDED data only men el cache, men el startAdr lehad el stopAdr fel which
+      let load = true;
+      switch (types) {
+        case "SW":
+        case "SD":
+        case "S.S":
+        case "S.D":
+          load = false;
+          break;
+      }
 
-      setMulBuffer((prevBuffer) =>
-        updateOperationBuffer(prevBuffer, instructionTag, newValue, null)
-      );
+      //law load, hageeb el binary men el cache wahawelo decimal we hahoto fel register file
+      let decToReg = -1;
+      if (load) {
+        let binFromCache = "";
+        for (let i = 0; i < cacheSize; i++) {
+          if (startAdr == cache[i].which && startAdr <= stopAdr) {
+            binFromCache = cache[i].value + binFromCache;
+            startAdr++;
+          }
+        }
+        decToReg = binaryToDecimal(binFromCache);
+      }
 
-      //set qi to 0 in register file, set value to result of mem[address];
-      //console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
-      setRegisterFile((prevRegisterFile) => {
-        // console.log(
-        //   `prevRegisterFile before: ${JSON.stringify(prevRegisterFile)}`
-        // );
-        const updatedRegisterFile = updateRegisterFile(
-          prevRegisterFile,
-          instructionTag,
-          newValue,
-          indexInRegisterFile
-        );
-        // console.log(
-        //   `prevRegisterFile after: ${JSON.stringify(updatedRegisterFile)}`
-        // );
-        return updatedRegisterFile;
-      });
+      //law store hageeb el decimal men el register file wahawelo decimal we hahoto fel cache
+      //let decFromReg = 650777868590383874n;
+      //let decFromReg = 2n;
+      let finalCache = [...cache];
+      if (!load) {
+        let binToCache = decimalToBinary(decFromReg);
 
-      //write current clk cycle to summary
-      // console.log(`tagLetter: ${tagLetter}`);
-      // console.log(`buffer: ${JSON.stringify(buffer)}`);
-      // console.log(`indexInSummary: ${indexInSummary}`);
-      setSummary((prevSummary) =>
-        updateSummary(prevSummary, indexInSummary, GLOBAL_CLK)
-      );
+        //keep on concatenating 0' at the start of the binary string
+        while (binToCache.length < 64) {
+          binToCache = "0" + binToCache;
+        }
+
+        const chunkSize = 8;
+        const chunks = [];
+
+        for (let i = 0; i < binToCache.length; i += chunkSize) {
+          chunks.push(binToCache.substring(i, i + chunkSize));
+        }
+
+        //store in the cache
+        let chunkIndex = 7;
+        let startAdrTemp = startAdr;
+
+        for (let i = 0; i < cacheSize; i++) {
+          if (cache[i].which === startAdrTemp && startAdrTemp <= stopAdr) {
+            finalCache[i] = {
+              ...finalCache[i],
+              value: chunks[chunkIndex],
+            };
+            startAdrTemp++;
+            chunkIndex--;
+          }
+        }
+        setCache(finalCache);
+
+        let noBytes = -1;
+        switch (types) {
+          case "SW":
+          case "S.S":
+            noBytes = 4;
+            break;
+          case "SD":
+          case "S.D":
+            noBytes = 8;
+            break;
+        }
+
+        //store in the memory
+        //console.log("noBytes 8 : " + noBytes);
+        //console.log("startAdr 2 : " + startAdr);
+        let newMemory = [...memory];
+        for (let i = 0; i < noBytes; i++) {
+          //console.log("ana dakhalt hena fe i= " + i);
+          //console.log("haghayar fe mem [" + startAdr + "]");
+          //console.log("hahot feeha chunk: " + chunks[7 - i]);
+          //setMemory((prevMemory) => {
+          newMemory[startAdr] = {
+            ...newMemory[startAdr],
+            value: chunks[7 - i],
+          };
+          //console.log("newww: " + JSON.stringify(newMemory));
+          //return newMemory;
+          //});
+          startAdr++;
+        }
+        setMemory(newMemory);
+        console.log("newww: " + JSON.stringify(newMemory));
+      }
+
+      //update buffers that need the value returning from the load
       break;
     }
     case "B":
       const buffer = branchBuffer;
       const indexInBuffer = parseInt(instructionTag?.tag.slice(1)) - 1;
+      //console.log(`indexInBuffer: ${indexInBuffer}`);
       const indexInRegisterFile = buffer[indexInBuffer]?.indexInRegisterFile;
       const indexInSummary = buffer[indexInBuffer]?.indexInSummary;
       const operationString =
@@ -495,8 +587,8 @@ const WritebackQuestion = (
           (register) => register?.register === secondRegister
         ).value
       );
-      console.log(`firstRegisterValue: ${firstRegisterValue}`);
-      console.log(`secondRegisterValue: ${secondRegisterValue}`);
+      //console.log(`firstRegisterValue: ${firstRegisterValue}`);
+      //console.log(`secondRegisterValue: ${secondRegisterValue}`);
 
       //console.log(`loopToIndex: ${loopToIndex}`);
       if (
