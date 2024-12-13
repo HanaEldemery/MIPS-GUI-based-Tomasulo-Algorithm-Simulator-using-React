@@ -2,6 +2,8 @@ import OperationBuffer from "../buffers/operationBuffer";
 import StoreBuffer from "../buffers/storeBuffer";
 import LoadBuffer from "../buffers/loadBuffer";
 import IntegerRegisterFile from "../table/integerRegisterFile";
+import SplitData from "../data/splitData";
+
 const integerToBinary = (integer) => {
   if (integer < 0 || integer > 255) {
     throw new Error("Input must be between 0 and 255 for 8-bit binary.");
@@ -248,8 +250,8 @@ const WritebackQuestion = (
       const indexInBuffer = parseInt(instructionTag?.tag.slice(1)) - 1;
       const indexInRegisterFile = buffer[indexInBuffer]?.indexInRegisterFile;
       const indexInSummary = buffer[indexInBuffer]?.indexInSummary;
-      const operationString =
-        summary[indexInSummary]?.instruction.split(" ")[0];
+      const splitData = SplitData(summary[indexInSummary]?.instruction);
+      const operationString = splitData[0];
       //const operation =
       //  operationString === "MUL.D"
       //    ? "*"
@@ -441,7 +443,7 @@ const WritebackQuestion = (
       const indexInBuffer = parseInt(instructionTag?.tag.slice(1)) - 1;
       console.log(`indexInBuffer: ${indexInBuffer}`);
       const indexInSummary = buffer[indexInBuffer]?.indexInSummary;
-      const splitData = summary[indexInSummary]?.instruction?.split(" ");
+      const splitData = SplitData(summary[indexInSummary]?.instruction);
       const types = splitData[0];
       let startAdrString = splitData[2];
       let startAdr = parseInt(startAdrString);
@@ -595,7 +597,7 @@ const WritebackQuestion = (
       //update buffers that need the value returning from the load
       let toPutInBuffer;
       //console.log(`toPutInBuffer: ${toPutInBuffer}`);
-      console.log(`indexInRegisterFile: ${indexInRegisterFile}`);
+      //console.log(`indexInRegisterFile: ${indexInRegisterFile}`);
       if (types[0] === "L") {
         if (types === "LD" || types === "LW") {
           toPutInBuffer = `R${indexInRegisterFile}`;
@@ -677,12 +679,17 @@ const WritebackQuestion = (
       //console.log(`indexInBuffer: ${indexInBuffer}`);
       const indexInRegisterFile = buffer[indexInBuffer]?.indexInRegisterFile;
       const indexInSummary = buffer[indexInBuffer]?.indexInSummary;
-      const operationString =
-        summary[indexInSummary]?.instruction.split(" ")[0];
 
-      //console.log(`operationString: ${operationString}`);
+      const summaryInstruction = SplitData(
+        summary[indexInSummary]?.instruction
+      );
 
-      const whichLoop = summary[indexInSummary]?.instruction.split(" ")[3];
+      const operationString = summaryInstruction[0];
+
+      console.log(`operationString: ${operationString}`);
+
+      const whichLoop = summaryInstruction[3];
+      console.log(`whichLoop: ${whichLoop}`);
       let loopToIndex;
       if (/^\d+$/.test(whichLoop)) {
         //it's a string of numbers
@@ -695,8 +702,9 @@ const WritebackQuestion = (
         );
       }
 
-      const firstRegister = summary[indexInSummary]?.instruction.split(" ")[1];
-      const secondRegister = summary[indexInSummary]?.instruction.split(" ")[2];
+      //console.log(`summaryInstruction: ${summaryInstruction}`);
+      const firstRegister = summaryInstruction[1];
+      const secondRegister = summaryInstruction[2];
 
       //console.log(`firstRegister: ${firstRegister}`);
       //console.log(`secondRegister: ${secondRegister}`);

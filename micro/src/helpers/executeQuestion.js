@@ -1,4 +1,5 @@
 import OperationBuffer from "../buffers/operationBuffer";
+import SplitData from "../data/splitData";
 
 const updateSummary = (summary, indexInSummary, GLOBAL_CLK) =>
   summary.map((record, index) => {
@@ -50,12 +51,14 @@ const ExecutionQuestion = (
 
       //console.log(`summary[i].location[0]: ${summary[i].location[0]}`);
       //if summary elem has not started execution yet
+      const theSummaryInstruction = SplitData(summary[i]?.instruction);
+      console.log(`theSummaryInstruction: ${theSummaryInstruction}`);
       let operationTime;
       if (summary[i].location[0] === "M") {
         //if mul div operation
         operationTime =
-          summary[i]?.instruction.split(" ")[0] === "MUL.D" ||
-          summary[i]?.instruction.split(" ")[0] === "MUL.S"
+          theSummaryInstruction[0] === "MUL.D" ||
+          theSummaryInstruction[0] === "MUL.S"
             ? mulHit
             : divHit;
         if (!mulBuffer[locIndex].qj && !mulBuffer[locIndex].qk) {
@@ -75,12 +78,12 @@ const ExecutionQuestion = (
         }
       } else if (summary[i].location[0] === "A") {
         operationTime =
-          summary[i]?.instruction?.split(" ")[0] === "ADD.D" ||
-          summary[i]?.instruction?.split(" ")[0] === "ADD.S"
+          theSummaryInstruction[0] === "ADD.D" ||
+          theSummaryInstruction[0] === "ADD.S"
             ? addHit
-            : summary[i]?.instruction?.split(" ")[0] === "DADDI"
+            : theSummaryInstruction[0] === "DADDI"
             ? integerAddHit
-            : summary[i]?.instruction?.split(" ")[0] === "DSUBI"
+            : theSummaryInstruction[0] === "DSUBI"
             ? integerSubHit
             : subHit;
 
@@ -106,8 +109,8 @@ const ExecutionQuestion = (
           }
         }
       } else if (summary[i].location[0] === "L") {
-        const startAdr = parseInt(summary[i].instruction.split(" ")[2]);
-        const type = summary[i].instruction.split(" ")[0];
+        const startAdr = parseInt(theSummaryInstruction[2]);
+        const type = theSummaryInstruction[0];
         //ba3raf ana awza lehad address kam
         let stopAdr = -1;
         switch (type) {
@@ -146,8 +149,8 @@ const ExecutionQuestion = (
         );
       } else if (summary[i].location[0] === "S") {
         if (!storeBuffer[locIndex].q) {
-          const startAdr = parseInt(summary[i].instruction.split(" ")[2]);
-          const type = summary[i].instruction.split(" ")[0];
+          const startAdr = parseInt(theSummaryInstruction[2]);
+          const type = theSummaryInstruction[0];
           let stopAdr = -1;
           switch (type) {
             case "SW":
@@ -215,6 +218,7 @@ const ExecutionQuestion = (
       )
       .filter((mappedRecord) => mappedRecord !== -1);
     //enters law MESH haga bt-execute fe 1 clk cycle AND yet to have finished execution
+    const theSummaryInstructionTwo = SplitData(summary[i]?.instruction);
     if (
       summary[i].executionComplete &&
       summary[i].executionComplete.includes("...") &&
@@ -232,8 +236,8 @@ const ExecutionQuestion = (
           //   )}`
           // );
           //console.log("cache abl ma3raf hit or miss: " + JSON.stringify(cache));
-          const startAdr = parseInt(summary[i].instruction.split(" ")[2]);
-          const type = summary[i].instruction.split(" ")[0];
+          const startAdr = parseInt(theSummaryInstructionTwo[2]);
+          const type = theSummaryInstructionTwo[0];
           let stopAdr = -1;
           switch (type) {
             case "SW":
@@ -268,8 +272,8 @@ const ExecutionQuestion = (
           break;
         case "M":
           if (
-            summary[i].instruction.split(" ")[0] === "MUL.D" ||
-            summary[i].instruction.split(" ")[0] === "MUL.S"
+            theSummaryInstructionTwo[0] === "MUL.D" ||
+            theSummaryInstructionTwo[0] === "MUL.S"
           ) {
             timeForOp = mulHit;
           } else {
@@ -278,13 +282,13 @@ const ExecutionQuestion = (
           break;
         case "A":
           if (
-            summary[i].instruction.split(" ")[0] === "ADD.D" ||
-            summary[i].instruction.split(" ")[0] === "ADD.S"
+            theSummaryInstructionTwo[0] === "ADD.D" ||
+            theSummaryInstructionTwo[0] === "ADD.S"
           )
             timeForOp = addHit;
-          else if (summary[i].instruction.split(" ")[0] === "DADDI")
+          else if (theSummaryInstructionTwo[0] === "DADDI")
             timeForOp = integerAddHit;
-          else if (summary[i].instruction.split(" ")[0] === "DSUBI")
+          else if (theSummaryInstructionTwo[0] === "DSUBI")
             timeForOp = integerSubHit;
           else timeForOp = subHit;
           break;
@@ -377,8 +381,8 @@ const ExecutionQuestion = (
         //   SET_STALLING(false);
         // }
         if (summary[i].location[0] === "L" || summary[i].location[0] === "S") {
-          const startAdr = parseInt(summary[i].instruction.split(" ")[2]);
-          const type = summary[i].instruction.split(" ")[0];
+          const startAdr = parseInt(theSummaryInstructionTwo[2]);
+          const type = theSummaryInstructionTwo[0];
           let stopAdr = -1;
           switch (type) {
             case "SW":

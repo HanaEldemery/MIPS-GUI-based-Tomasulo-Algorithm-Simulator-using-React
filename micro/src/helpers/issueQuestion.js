@@ -167,6 +167,7 @@ const IssueQuestion = (
         const index = addBuffer.findIndex((record) => record.busy === 0);
 
         const splitData = SplitData(fileContent[LINE_TXT]);
+        console.log(`splitData: ${splitData}`);
 
         const registerOne = splitData[2];
         const registerTwo = splitData[3];
@@ -503,8 +504,9 @@ const IssueQuestion = (
         const index = branchBuffer.findIndex((record) => record.busy === 0);
 
         const currentInstruction = fileContent[LINE_TXT];
-        const splitInstruction = currentInstruction.split(" ");
-        //console.log(`splitInstruction: ${splitInstruction}`);
+        //const splitInstruction = currentInstruction.split(" "); 13-12-2024
+        const splitInstruction = SplitData(currentInstruction);
+        console.log(`splitInstruction: ${splitInstruction}`);
         //BNE,R1,R2,LOOP
 
         const registerOne = splitInstruction[1];

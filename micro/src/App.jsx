@@ -17,6 +17,37 @@ import IntegerRegisterFile from "./table/integerRegisterFile";
 import Memory from "./table/memory";
 import Cache from "./table/cache";
 
+function parseInstruction(instruction) {
+  instruction = instruction.trim();
+
+  let label = null;
+  if (instruction.includes(":")) {
+    const parts = instruction.split(":", 2);
+    label = parts[0].trim();
+    instruction = parts[1].trim();
+  }
+
+  const match = instruction.match(/^(\S+)\s+(.*)$/);
+
+  if (!match) {
+    throw new Error("Invalid instruction format");
+  }
+
+  const operation = match[1];
+  const operandsString = match[2];
+
+  const operandList = operandsString
+    .split(",")
+    .map((operand) => operand.trim())
+    .filter((operand) => operand.length > 0);
+
+  const result = label
+    ? [label + ":", operation, ...operandList]
+    : [operation, ...operandList];
+
+  return result;
+}
+
 const App = () => {
   const memMiss = 3;
   const memHit = 2;
@@ -27,6 +58,56 @@ const App = () => {
   const integerBranchHit = 3;
   const mulHit = 6;
   const divHit = 6;
+
+  // const [memMiss, setMemMiss] = useState(null);
+  // const [memHit, setMemHit] = useState(null);
+  // const [addHit, setAddHit] = useState(null);
+  // const [subHit, setSubHit] = useState(null);
+  // const [integerAddHit, setIntegerAddHit] = useState(null);
+  // const [integerSubHit, setIntegerSubHit] = useState(null);
+  // const [integerBranchHit, setIntegerBranchHit] = useState(null);
+  // const [mulHit, setMulHit] = useState(null);
+  // const [divHit, setDivHit] = useState(null);
+
+  // useEffect(() => {
+  //   if (
+  //     memMiss === null ||
+  //     memHit === null ||
+  //     addHit === null ||
+  //     subHit === null ||
+  //     integerAddHit === null ||
+  //     integerSubHit === null ||
+  //     integerBranchHit === null ||
+  //     mulHit === null ||
+  //     divHit === null
+  //   ) {
+  //     setMemMiss(parseInt(prompt("Enter value for memMiss:", 3), 10));
+  //     setMemHit(parseInt(prompt("Enter value for memHit:", 2), 10));
+  //     setAddHit(parseInt(prompt("Enter value for addHit:", 4), 10));
+  //     setSubHit(parseInt(prompt("Enter value for subHit:", 9), 10));
+  //     setIntegerAddHit(
+  //       parseInt(prompt("Enter value for integerAddHit:", 2), 10)
+  //     );
+  //     setIntegerSubHit(
+  //       parseInt(prompt("Enter value for integerSubHit:", 1), 10)
+  //     );
+  //     setIntegerBranchHit(
+  //       parseInt(prompt("Enter value for integerBranchHit:", 3), 10)
+  //     );
+  //     setMulHit(parseInt(prompt("Enter value for mulHit:", 6), 10));
+  //     setDivHit(parseInt(prompt("Enter value for divHit:", 6), 10));
+  //   }
+  // }, [
+  //   memMiss,
+  //   memHit,
+  //   addHit,
+  //   subHit,
+  //   integerAddHit,
+  //   integerSubHit,
+  //   integerBranchHit,
+  //   mulHit,
+  //   divHit,
+  // ]);
 
   const memSize = 100;
   const cacheSize = 48;
@@ -39,7 +120,12 @@ const App = () => {
   let fileContent = [];
   for (const line in fileContentBefore) {
     //console.log(`line: ${fileContentBefore[line]}`);
-    const arrayOfLine = fileContentBefore[line].split(" ");
+
+    //const arrayOfLine = fileContentBefore[line].split(",");
+    const arrayOfLine = parseInstruction(fileContentBefore[line]);
+    //console.log(`arrayOfLine: ${Array.isArray(arrayOfLine)}`);
+    //console.log(`arrayOfLine: [${arrayOfLine}]`);
+
     const firstElement = arrayOfLine[0];
     const firstElementLength = firstElement.length;
     //console.log(`firstElementLength: ${firstElement.length}`);
@@ -52,7 +138,7 @@ const App = () => {
       fileContent = [
         ...fileContent,
         fileContentBefore[line].slice(
-          firstElementLength + 1,
+          firstElementLength /* + 1*/,
           fileContentBefore[line].length
         ),
       ];
@@ -168,6 +254,7 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    //console.log(`fileContent: ${fileContent}`);
     if (
       fileContent?.length > 0 &&
       LINE_TXT < fileContent?.length &&
@@ -377,7 +464,6 @@ const App = () => {
         {RenderTable("Memory", memory, ["address", "value"])}
       </div>
 
-      {/* Fixed controls */}
       <div className="fixed top-0 w-full flex items-center justify-between p-4 bg-white shadow-lg z-50">
         <button
           onClick={handleOnNextClockCycleClick}
@@ -386,13 +472,21 @@ const App = () => {
           Next Clockcycle
         </button>
 
+        <span className="text-sm text-gray-600 mx-4">
+          <span>memMiss: {memMiss}</span> | <span>memHit: {memHit}</span> |{" "}
+          <span>addHit: {addHit}</span> | <span>subHit: {subHit}</span> |{" "}
+          <span>integerAddHit: {integerAddHit}</span> |{" "}
+          <span>integerSubHit: {integerSubHit}</span> |{" "}
+          <span>integerBranchHit: {integerBranchHit}</span> |{" "}
+          <span>mulHit: {mulHit}</span> | <span>divHit: {divHit}</span>
+        </span>
+
         <span className="mr-16 text-xl font-semibold text-gray-800">
           Current Clock Cycle:{" "}
           <span className="text-purple-500">{GLOBAL_CLK}</span>
         </span>
       </div>
 
-      {/* Modal for done state */}
       {isDone && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
           <div className="bg-white rounded-lg p-6 shadow-lg w-96 text-center">
