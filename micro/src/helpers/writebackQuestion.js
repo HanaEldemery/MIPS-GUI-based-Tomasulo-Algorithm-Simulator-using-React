@@ -238,7 +238,7 @@ const WritebackQuestion = (
 
   //get operation, register 1 and 2 in case of MUL / DIV / ADD / SUB
   //get operation and address in case of L.D / L.S
-  let newValue;
+  let newValueNumber;
   switch (tagLetter) {
     case "M":
     case "A": {
@@ -264,78 +264,101 @@ const WritebackQuestion = (
       switch (operationString) {
         case "DADDI":
           toPutInBuffer = `R${indexInRegisterFile}`;
-          valueFirstRegister = parseInt(
-            integerRegisterFile[
-              parseInt(buffer[indexInBuffer]?.vj?.split("R")[1])
-            ]?.value
-          );
-          valueImmediate = parseInt(buffer[indexInBuffer]?.vk);
-          newValue = valueFirstRegister + valueImmediate;
+          //console.log(
+          //  `parseInt(buffer[indexInBuffer]?.vj): ${parseInt(
+          //    buffer[indexInBuffer]?.vj
+          //  )}`
+          //);
+          //console.log(
+          //  `undefined?: ${
+          //    integerRegisterFile[parseInt(buffer[indexInBuffer]?.vj)]?.value
+          //  }`
+          //);
+          valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
+          //console.log(`valueFirstRegister: ${valueFirstRegister}`);
+          //console.log(
+          //  `buffer[indexInBuffer]?.vk: ${buffer[indexInBuffer]?.vk}`
+          //);
+          valueImmediate = BigInt(buffer[indexInBuffer]?.vk);
+          newValueNumber = valueFirstRegister + valueImmediate;
+          //console.log(`newValue: ${newValue}`);
           break;
         case "DSUBI":
           toPutInBuffer = `R${indexInRegisterFile}`;
-          valueFirstRegister = parseInt(
-            integerRegisterFile[
-              parseInt(buffer[indexInBuffer]?.vj?.split("R")[1])
-            ]?.value
-          );
-          valueImmediate = parseInt(buffer[indexInBuffer]?.vk);
-          newValue = valueFirstRegister - valueImmediate;
+          // valueFirstRegister = BigInt(
+          //   integerRegisterFile[
+          //     parseInt(buffer[indexInBuffer]?.vj?.split("R")[1])
+          //   ]?.value
+          // );
+          valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
+          valueImmediate = BigInt(buffer[indexInBuffer]?.vk);
+          newValueNumber = valueFirstRegister - valueImmediate;
           break;
         case "MUL.D":
         case "MUL.S":
           toPutInBuffer = `F${indexInRegisterFile}`;
-          valueFirstRegister = parseInt(
-            registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
-              ?.value
-          );
-          valueSecondRegister = parseInt(
-            registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
-              ?.value
-          );
-          newValue = valueFirstRegister * valueSecondRegister;
+          // valueFirstRegister = parseInt(
+          //   registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
+          //     ?.value
+          // );
+          // valueSecondRegister = parseInt(
+          //   registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
+          //     ?.value
+          // );
+          valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
+          valueSecondRegister = BigInt(buffer[indexInBuffer]?.vk);
+          newValueNumber = valueFirstRegister * valueSecondRegister;
           break;
         case "DIV.D":
         case "DIV.S":
           toPutInBuffer = `F${indexInRegisterFile}`;
-          valueFirstRegister = parseInt(
-            registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
-              ?.value
-          );
-          valueSecondRegister = parseInt(
-            registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
-              ?.value
-          );
-          newValue = valueFirstRegister / valueSecondRegister;
+          // valueFirstRegister = parseInt(
+          //   registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
+          //     ?.value
+          // );
+          // valueSecondRegister = parseInt(
+          //   registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
+          //     ?.value
+          // );
+          valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
+          valueSecondRegister = BigInt(buffer[indexInBuffer]?.vk);
+          newValueNumber = valueFirstRegister / valueSecondRegister;
           break;
         case "ADD.D":
         case "ADD.S":
           toPutInBuffer = `F${indexInRegisterFile}`;
-          valueFirstRegister = parseInt(
-            registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
-              ?.value
-          );
-          valueSecondRegister = parseInt(
-            registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
-              ?.value
-          );
-          newValue = valueFirstRegister + valueSecondRegister;
+          // valueFirstRegister = parseInt(
+          //   registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
+          //     ?.value
+          // );
+          // valueSecondRegister = parseInt(
+          //   registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
+          //     ?.value
+          // );
+          valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
+          valueSecondRegister = BigInt(buffer[indexInBuffer]?.vk);
+          newValueNumber = valueFirstRegister + valueSecondRegister;
           break;
         case "SUB.D":
         case "SUB.S":
           toPutInBuffer = `F${indexInRegisterFile}`;
-          valueFirstRegister = parseInt(
-            registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
-              ?.value
-          );
-          valueSecondRegister = parseInt(
-            registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
-              ?.value
-          );
-          newValue = valueFirstRegister - valueSecondRegister;
+          // valueFirstRegister = parseInt(
+          //   registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
+          //     ?.value
+          // );
+          // valueSecondRegister = parseInt(
+          //   registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
+          //     ?.value
+          // );
+          valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
+          valueSecondRegister = BigInt(buffer[indexInBuffer]?.vk);
+          newValueNumber = valueFirstRegister - valueSecondRegister;
           break;
       }
 
+      const newValue = `${newValueNumber}`;
+      //console.log(`newValue: ${newValue}`);
+      //console.log(`typeof newValue: ${typeof newValue}`);
       setMulBuffer((prevBuffer) =>
         updateOperationBuffer(
           prevBuffer,
@@ -376,6 +399,8 @@ const WritebackQuestion = (
       );
 
       //check 12-12-2024
+      //console.log(`newValue: ${newValue}`);
+      //console.log(`typeof newValue: ${typeof newValue}`);
       if (operationString === "DADDI" || operationString === "DSUBI")
         setIntegerRegisterFile((prevRegisterFile) =>
           updateRegisterFile(
