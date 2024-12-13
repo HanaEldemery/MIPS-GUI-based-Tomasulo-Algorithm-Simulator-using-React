@@ -217,8 +217,7 @@ const WritebackQuestion = (
       })
       .map((filteredRecord) => filteredRecord?.location);
 
-  if (!arrayOfInstructionTags?.length)
-    return console.log("" /*"nothing ready for writeback"*/);
+  if (!arrayOfInstructionTags?.length) return; //console.log("" /*"nothing ready for writeback"*/);
 
   //console.log(`arrayOfInstructionTags: ${arrayOfInstructionTags}`);
 
@@ -441,7 +440,7 @@ const WritebackQuestion = (
       const buffer = tagLetter === "L" ? loadBuffer : storeBuffer;
       //console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
       const indexInBuffer = parseInt(instructionTag?.tag.slice(1)) - 1;
-      console.log(`indexInBuffer: ${indexInBuffer}`);
+      //console.log(`indexInBuffer: ${indexInBuffer}`);
       const indexInSummary = buffer[indexInBuffer]?.indexInSummary;
       const splitData = SplitData(summary[indexInSummary]?.instruction);
       const types = splitData[0];
@@ -452,7 +451,7 @@ const WritebackQuestion = (
       const indexInRegisterFile = parseInt(indexInRegisterFileToParse);
       //const indexInRegisterFile = indexInRegisterFileString.substring(1);
       //const indexInRegisterFile = buffer[indexInBuffer].indexInRegisterFile;
-      console.log(`indexInRegisterFile: ${indexInRegisterFile}`);
+      //console.log(`indexInRegisterFile: ${indexInRegisterFile}`);
 
       //console.log("type: " + types);
       //console.log("startAdr: " + startAdr);
@@ -470,11 +469,11 @@ const WritebackQuestion = (
         decFromRegPrev = registerFile[indexInRegisterFile]?.value;
       else decFromRegPrev = integerRegisterFile[indexInRegisterFile]?.value;
 
-      console.log("ana fel " + types + " delwa2ty");
-      console.log("decFromRegPrev: " + decFromRegPrev);
+      //console.log("ana fel " + types + " delwa2ty");
+      //console.log("decFromRegPrev: " + decFromRegPrev);
 
       let decFromReg = parseInt(decFromRegPrev);
-      console.log("decFromReg: " + decFromReg);
+      //console.log("decFromReg: " + decFromReg);
 
       let stopAdr = -1;
       switch (types) {
@@ -491,7 +490,7 @@ const WritebackQuestion = (
           stopAdr = startAdr + 7;
           break;
       }
-      console.log("stopAdr: " + stopAdr);
+      //console.log("stopAdr: " + stopAdr);
       //FEL WRITE BACK
       //law hit haty el NEEDED data only men el cache, men el startAdr lehad el stopAdr fel which
       let load = true;
@@ -503,7 +502,7 @@ const WritebackQuestion = (
           load = false;
           break;
       }
-      console.log(load ? "true" : "false");
+      //console.log(load ? "true" : "false");
       //law load, hageeb el binary men el cache wahawelo decimal we hahoto fel register file
       let decToReg = -1;
       if (load) {
@@ -514,11 +513,11 @@ const WritebackQuestion = (
             startAdr++;
           }
         }
-        console.log("BIN FROM CACHE: " + binFromCache);
+        //console.log("BIN FROM CACHE: " + binFromCache);
         decToReg = binaryToDecimal(binFromCache);
       }
 
-      console.log("DEC TO REG: " + decToReg);
+      //console.log("DEC TO REG: " + decToReg);
 
       //law store hageeb el decimal men el register file wahawelo decimal we hahoto fel cache
       //let decFromReg = 650777868590383874n;
@@ -527,12 +526,12 @@ const WritebackQuestion = (
       if (!load) {
         let binToCache = decimalToBinary(decFromReg);
 
-        console.log("BIN TO CACHE: " + binToCache);
+        //console.log("BIN TO CACHE: " + binToCache);
         //keep on concatenating 0' at the start of the binary string
         while (binToCache.length < 64) {
           binToCache = "0" + binToCache;
         }
-        console.log("BIN TO CACHE: " + binToCache);
+        //console.log("BIN TO CACHE: " + binToCache);
 
         const chunkSize = 8;
         const chunks = [];
@@ -541,7 +540,7 @@ const WritebackQuestion = (
           chunks.push(binToCache.substring(i, i + chunkSize));
         }
 
-        console.log("CHUNKS: " + chunks);
+        //console.log("CHUNKS: " + chunks);
 
         //store in the cache
         let chunkIndex = 7;

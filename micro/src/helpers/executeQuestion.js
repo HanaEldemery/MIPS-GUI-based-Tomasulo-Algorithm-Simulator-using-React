@@ -38,6 +38,7 @@ const ExecutionQuestion = (
   SET_STALLING
 ) => {
   for (let i = 0; i < summary.length; i++) {
+    console.log("missMiss: " + summary[i]?.missMiss);
     //loop over all the summary
     if (!summary[i].executionComplete && summary[i].issue < GLOBAL_CLK) {
       let locIndex = parseInt(summary[i].location.slice(1)) - 1;
@@ -134,16 +135,28 @@ const ExecutionQuestion = (
             break;
           }
         }
+        console.log("ana ba exec " + type + " wana haleyan ");
+        console.log(miss ? "miss" : "hit");
         operationTime = memHit;
         if (miss) {
           operationTime = memMiss;
         }
+        console.log("CHECK ENY HENA");
+        console.log(miss ? "miss" : "hit");
         setSummary((prevSum) =>
           prevSum.map((item, index) =>
             index === i
               ? operationTime === 1
-                ? { ...item, executionComplete: `${GLOBAL_CLK}` }
-                : { ...item, executionComplete: `${GLOBAL_CLK}...` }
+                ? {
+                    ...item,
+                    missMiss: miss,
+                    executionComplete: `${GLOBAL_CLK}`,
+                  }
+                : {
+                    ...item,
+                    missMiss: miss,
+                    executionComplete: `${GLOBAL_CLK}...`,
+                  }
               : item
           )
         );
@@ -172,17 +185,30 @@ const ExecutionQuestion = (
               break;
             }
           }
+          //console.log("eh el habal da");
+          //console.log("ana ba exec " + type + " wana haleyan ");
+          //console.log(miss ? "miss" : "hit");
           operationTime = memHit;
           if (miss) {
             operationTime = memMiss;
           }
+          console.log("CHECK ENY HENA");
+          console.log(miss ? "miss" : "hit");
           {
             setSummary((prevSum) =>
               prevSum.map((item, index) =>
                 index === i
                   ? operationTime === 1
-                    ? { ...item, executionComplete: `${GLOBAL_CLK}` }
-                    : { ...item, executionComplete: `${GLOBAL_CLK}...` }
+                    ? {
+                        ...item,
+                        missMiss: miss,
+                        executionComplete: `${GLOBAL_CLK}`,
+                      }
+                    : {
+                        ...item,
+                        missMiss: miss,
+                        executionComplete: `${GLOBAL_CLK}...`,
+                      }
                   : item
               )
             );
@@ -263,8 +289,14 @@ const ExecutionQuestion = (
               break;
             }
           }
+          /*console.log(
+            "ana ha write back instruction: " +
+              theSummaryInstructionTwo +
+              " wana haleyan "
+          );
+          console.log(miss ? "miss" : "hit");*/
           timeForOp = memHit;
-          if (miss) {
+          if (summary[i]?.missMiss) {
             timeForOp = memMiss;
           }
           //timeForOp = locationLoadsStoresInSummary[0] === i ? memMiss : memHit;

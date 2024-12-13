@@ -49,7 +49,7 @@ function parseInstruction(instruction) {
 }
 
 const App = () => {
-  const memMiss = 3;
+  const memMiss = 7;
   const memHit = 2;
   const addHit = 4;
   const subHit = 9;
@@ -446,6 +446,7 @@ const App = () => {
         "issue",
         "executionComplete",
         "writeBack",
+        "missMiss",
       ])}
       <div className="grid grid-cols-2 gap-4">
         {RenderTable("FP Register File", registerFile, [

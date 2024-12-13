@@ -299,7 +299,7 @@ const IssueQuestion = (
         }
       } else {
         SET_LINE_TXT((prev) => prev - 1);
-        console.log("CHECK IF STALL WORKS");
+        //console.log("CHECK IF STALL WORKS");
       }
       break;
     case "store-buffer":

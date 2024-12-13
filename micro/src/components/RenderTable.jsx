@@ -30,7 +30,13 @@ const RenderTable = (title, buffer = [], headers = []) => {
                       key={header}
                       className="border border-gray-300 px-4 py-2 text-gray-600"
                     >
-                      {item?.[header] === "" ? "-" : item?.[header] ?? "-"}
+                      {typeof item?.[header] === "boolean"
+                        ? item?.[header]
+                          ? "true"
+                          : "false"
+                        : item?.[header] === "" || item?.[header] == null
+                        ? "-"
+                        : item?.[header]}
                     </td>
                   ))}
                 </tr>

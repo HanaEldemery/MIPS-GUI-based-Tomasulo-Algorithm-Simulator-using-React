@@ -7,7 +7,8 @@ export default class Summary {
     issue = -1,
     executionComplete = "",
     writeBack = -1,
-    location = ""
+    location = "",
+    missMiss = true
   ) {
     this.iteration = iteration;
     this.instruction = instruction;
@@ -17,5 +18,6 @@ export default class Summary {
     this.executionComplete = executionComplete;
     this.writeBack = writeBack;
     this.location = location;
+    this.missMiss = missMiss;
   }
 }
