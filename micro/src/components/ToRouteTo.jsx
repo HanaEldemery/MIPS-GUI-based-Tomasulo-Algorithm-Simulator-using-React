@@ -496,7 +496,6 @@ const ToRouteTo = () => {
           "issue",
           "executionComplete",
           "writeBack",
-          "missMiss",
         ])}
         <div className="grid grid-cols-2 gap-4">
           {RenderTable("FP Register File", registerFile, [

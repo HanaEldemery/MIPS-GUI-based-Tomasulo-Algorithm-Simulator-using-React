@@ -1,3 +1,4 @@
-L.D F0, 0
-ADD.D F1, F1, F1
-SUB.D F2, F1, F1
+LD R0, 0
+ADD.D R1, R1, R1
+ADD.D R2, R2, R2
+LD R3, 15
