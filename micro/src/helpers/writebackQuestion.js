@@ -558,6 +558,7 @@ const WritebackQuestion = (
         //console.log("newww: " + JSON.stringify(newMemory));
       }
 
+      let decToRegString = "" + decToReg;
       //update buffers that need the value returning from the load
       if (types[0] === "L") {
         if (types === "LD" || types === "LW") {
@@ -565,7 +566,7 @@ const WritebackQuestion = (
             updateRegisterFile(
               prevRegisterFile,
               instructionTag,
-              decToReg,
+              decToRegString,
               indexInRegisterFile
             )
           );
@@ -574,7 +575,7 @@ const WritebackQuestion = (
             updateRegisterFile(
               prevRegisterFile,
               instructionTag,
-              decToReg,
+              decToRegString,
               indexInRegisterFile
             )
           );
@@ -583,7 +584,7 @@ const WritebackQuestion = (
           updateOperationBuffer(
             prevBuffer,
             instructionTag,
-            decToReg,
+            decToRegString,
             tagLetter === "M" ? indexInBuffer : null
           )
         );
@@ -591,7 +592,7 @@ const WritebackQuestion = (
           updateOperationBuffer(
             prevBuffer,
             instructionTag,
-            decToReg,
+            decToRegString,
             tagLetter === "A" ? indexInBuffer : null
           )
         );
@@ -599,14 +600,14 @@ const WritebackQuestion = (
           updateOperationBuffer(
             prevBuffer,
             instructionTag,
-            decToReg,
+            decToRegString,
             tagLetter === "B" ? indexInBuffer : null
           )
         );
         setStoreBuffer((prevBuffer) =>
           prevBuffer.map((record) =>
             record?.q === instructionTag?.tag
-              ? { ...record, v: decToReg, q: "" }
+              ? { ...record, v: decToRegString, q: "" }
               : record
           )
         );
