@@ -25,8 +25,8 @@ function binaryToDecimal(binaryString) {
 }
 
 function decimalToBinary(number) {
-  if (typeof number !== "number" && typeof number !== "bigint") {
-    throw new Error("Input must be an integer or BigInt");
+  if (typeof number !== "number" && typeof number !== "parseInt") {
+    throw new Error("Input must be an integer or parseInt");
   }
 
   return number.toString(2);
@@ -438,7 +438,7 @@ const WritebackQuestion = (
       console.log("ana fel " + types + " delwa2ty");
       console.log("decFromRegPrev: " + decFromRegPrev);
 
-      let decFromReg = BigInt(decFromRegPrev);
+      let decFromReg = parseInt(decFromRegPrev);
       console.log("decFromReg: " + decFromReg);
 
       let stopAdr = -1;
@@ -607,7 +607,7 @@ const WritebackQuestion = (
         setStoreBuffer((prevBuffer) =>
           prevBuffer.map((record) =>
             record?.q === instructionTag?.tag
-              ? { ...record, v: decToRegString, q: "" }
+              ? { ...record, v: decToReg, q: "" }
               : record
           )
         );
