@@ -39,10 +39,12 @@ const instructionToWriteBack = (
   arrayOfInstructionTags,
   mulBuffer,
   addBuffer,
-  storeBuffer
+  storeBuffer,
+  branchBuffer
 ) => {
+  //arrayOfInstructionTags: [L1, A1]
   //takes as input an array of all instruction tags that can be written back (pushed onto CDB) !!!at this clk cycle!!!
-  const instructionTagsWithAppearances =
+  let instructionTagsWithAppearances =
     arrayOfInstructionTags.length &&
     arrayOfInstructionTags.map((item) => ({
       tag: item,
@@ -53,39 +55,74 @@ const instructionToWriteBack = (
     const qj = record?.qj;
     const qk = record?.qk;
     if (qj || qk)
-      instructionTagsWithAppearances.length &&
-        instructionTagsWithAppearances.forEach((element) => {
-          if (element?.tag === qj || element?.tag === qk)
-            return { ...element, appeared: element.appeared + 1 };
-          return element;
-        });
+      if (instructionTagsWithAppearances.length) {
+        instructionTagsWithAppearances = instructionTagsWithAppearances.map(
+          (element) => {
+            if (element?.tag === qj && (qk === "" || qk === element?.tag))
+              return { ...element, appeared: element.appeared + 1 };
+            if (element?.tag === qk && (qj === "" || qj === element?.tag))
+              return { ...element, appeared: element.appeared + 1 };
+            return element;
+          }
+        );
+      }
   });
   addBuffer.map((record) => {
     const qj = record?.qj;
     const qk = record?.qk;
     if (qj || qk)
-      instructionTagsWithAppearances.length &&
-        instructionTagsWithAppearances.forEach((element) => {
-          if (element?.tag === qj || element?.tag === qk)
-            return { ...element, appeared: element.appeared + 1 };
-          return element;
-        });
+      if (instructionTagsWithAppearances.length) {
+        instructionTagsWithAppearances = instructionTagsWithAppearances.map(
+          (element) => {
+            if (element?.tag === qj && (qk === "" || qk === element?.tag))
+              return { ...element, appeared: element.appeared + 1 };
+            if (element?.tag === qk && (qj === "" || qj === element?.tag))
+              return { ...element, appeared: element.appeared + 1 };
+            return element;
+          }
+        );
+      }
+  });
+  //check branchBuffer 13-12-2024
+  branchBuffer.map((record) => {
+    const qj = record?.qj;
+    const qk = record?.qk;
+    if (qj || qk)
+      if (instructionTagsWithAppearances.length) {
+        instructionTagsWithAppearances = instructionTagsWithAppearances.map(
+          (element) => {
+            if (element?.tag === qj && (qk === "" || qk === element?.tag))
+              return { ...element, appeared: element.appeared + 1 };
+            if (element?.tag === qk && (qj === "" || qj === element?.tag))
+              return { ...element, appeared: element.appeared + 1 };
+            return element;
+          }
+        );
+      }
   });
   storeBuffer.map((record) => {
     const q = record?.q;
     if (q)
-      instructionTagsWithAppearances.length &&
-        instructionTagsWithAppearances.forEach((element) => {
-          if (element?.tag === q)
-            return { ...element, appeared: element.appeared + 1 };
-          return element;
-        });
+      if (instructionTagsWithAppearances.length) {
+        instructionTagsWithAppearances = instructionTagsWithAppearances.map(
+          (element) => {
+            if (element?.tag === q)
+              return { ...element, appeared: element.appeared + 1 };
+            return element;
+          }
+        );
+      }
   });
 
   //compare the number of appearances for each of the input instruction tags
   //-----------//
   //if equal ==> return the instruction tag at the first index
   //else ==> return the instruction tag which has the most appearances
+  // console.log(
+  //   `instructionTagsWithAppearances: ${JSON.stringify(
+  //     instructionTagsWithAppearances
+  //   )}`
+  // );
   return (
     instructionTagsWithAppearances.length &&
     instructionTagsWithAppearances.reduce(
@@ -227,12 +264,13 @@ const WritebackQuestion = (
     arrayOfInstructionTags,
     mulBuffer,
     addBuffer,
-    storeBuffer
+    storeBuffer,
+    branchBuffer
   );
 
-  //console.log(`loadBuffer 1: ${JSON.stringify(loadBuffer)}`);
-  //console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
+  console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
 
+  //console.log(`loadBuffer 1: ${JSON.stringify(loadBuffer)}`);
   //console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
 
   const tagLetter = instructionTag?.tag[0];

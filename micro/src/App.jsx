@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import FetchFileContent from "./data/fileReader";
 
 import RenderTable from "./components/RenderTable";
+import UserInput from "./components/UserInput";
 
 import LoadBuffer from "./buffers/loadBuffer";
 import StoreBuffer from "./buffers/storeBuffer";
@@ -51,13 +52,15 @@ function parseInstruction(instruction) {
 const App = () => {
   const memMiss = 7;
   const memHit = 2;
-  const addHit = 4;
-  const subHit = 9;
+  const addHit = 6;
+  const subHit = 6;
   const integerAddHit = 2;
   const integerSubHit = 1;
   const integerBranchHit = 3;
   const mulHit = 6;
   const divHit = 6;
+
+  const [isUserFormSubmitted, setIsUserFormSubmitted] = useState(true); //change later
 
   // const [memMiss, setMemMiss] = useState(null);
   // const [memHit, setMemHit] = useState(null);
@@ -68,6 +71,23 @@ const App = () => {
   // const [integerBranchHit, setIntegerBranchHit] = useState(null);
   // const [mulHit, setMulHit] = useState(null);
   // const [divHit, setDivHit] = useState(null);
+
+  const addBufferSize = 3;
+  const mulBufferSize = 2;
+  const loadBufferSize = 2;
+  const storeBufferSize = 2;
+  const cacheSize = 48;
+  const memSize = 200;
+  const blockSize = 16;
+  // const [addBufferSize, setAddBufferSize] = useState(0);
+  // const [mulBufferSize, setMulBufferSize] = useState(0);
+  // const [loadBufferSize, setLoadBufferSize] = useState(0);
+  // const [storeBufferSize, setStoreBufferSize] = useState(0);
+  // const [cacheSize, setCacheSize] = useState(0);
+  // const [memSize, setMemSize] = useState(0);
+  // const [blockSize, setBlockSize] = useState(0);
+  const integerRegisterFileSize = 32;
+  const fpRegisterFileSize = 32;
 
   // useEffect(() => {
   //   if (
@@ -108,10 +128,6 @@ const App = () => {
   //   mulHit,
   //   divHit,
   // ]);
-
-  const memSize = 100;
-  const cacheSize = 48;
-  const blockSize = 16;
 
   const fileContentBefore = FetchFileContent();
   //console.log(`fileContent: ${fileContent}`);
@@ -195,63 +211,79 @@ const App = () => {
   };
 
   useEffect(() => {
-    //user input (sizes)
-    const initialMulBuffer = [];
-    for (let i = 0; i < 2; i++) {
-      initialMulBuffer.push(new OperationBuffer());
+    if (
+      mulBufferSize > 0 &&
+      addBufferSize > 0 &&
+      loadBufferSize > 0 &&
+      storeBufferSize > 0 &&
+      memSize > 0 &&
+      cacheSize > 0
+    ) {
+      //user input (sizes)
+      const initialMulBuffer = [];
+      for (let i = 0; i < mulBufferSize; i++) {
+        initialMulBuffer.push(new OperationBuffer());
+      }
+      setMulBuffer(initialMulBuffer);
+
+      const initialAddBuffer = [];
+      for (let i = 0; i < addBufferSize; i++) {
+        initialAddBuffer.push(new OperationBuffer());
+      }
+      setAddBuffer(initialAddBuffer);
+
+      setBranchBuffer([new OperationBuffer()]);
+
+      const initialLoadBuffer = [];
+      for (let i = 0; i < loadBufferSize; i++) {
+        initialLoadBuffer.push(new LoadBuffer());
+      }
+      setLoadBuffer(initialLoadBuffer);
+
+      const initialStoreBuffer = [];
+      for (let i = 0; i < storeBufferSize; i++) {
+        initialStoreBuffer.push(new StoreBuffer());
+      }
+      setStoreBuffer(initialStoreBuffer);
+
+      const initialRegisterFile = [];
+      for (let i = 0; i < 32; i++) {
+        let register = `F${i}`;
+        initialRegisterFile.push(new RegisterFile(register, `${i}`, "0"));
+      }
+      setRegisterFile(initialRegisterFile);
+
+      const initialIntegerRegisterFile = [];
+      for (let i = 0; i < 32; i++) {
+        let register = `R${i}`;
+        initialIntegerRegisterFile.push(
+          new IntegerRegisterFile(register, `${i}`, "0")
+        );
+      }
+      setIntegerRegisterFile(initialIntegerRegisterFile);
+
+      const initialMemory = [];
+      for (let i = 0; i < memSize; i++) {
+        let address = i;
+        let value = integerToBinary(i);
+        initialMemory.push(new Memory(address, value));
+      }
+      setMemory(initialMemory);
+      //console.log(JSON.stringify(initialMemory));
+
+      const initialCache = [];
+      for (let i = 0; i < cacheSize; i++) initialCache.push(new Cache(i, -1));
+      setCache(initialCache);
+      //console.log(JSON.stringify(initialCache));
     }
-    setMulBuffer(initialMulBuffer);
-
-    const initialAddBuffer = [];
-    for (let i = 0; i < 3; i++) {
-      initialAddBuffer.push(new OperationBuffer());
-    }
-    setAddBuffer(initialAddBuffer);
-
-    setBranchBuffer([new OperationBuffer()]);
-
-    const initialLoadBuffer = [];
-    for (let i = 0; i < 3; i++) {
-      initialLoadBuffer.push(new LoadBuffer());
-    }
-    setLoadBuffer(initialLoadBuffer);
-
-    const initialStoreBuffer = [];
-    for (let i = 0; i < 2; i++) {
-      initialStoreBuffer.push(new StoreBuffer());
-    }
-    setStoreBuffer(initialStoreBuffer);
-
-    const initialRegisterFile = [];
-    for (let i = 0; i < 32; i++) {
-      let register = `F${i}`;
-      initialRegisterFile.push(new RegisterFile(register, `${i}`, "0"));
-    }
-    setRegisterFile(initialRegisterFile);
-
-    const initialIntegerRegisterFile = [];
-    for (let i = 0; i < 32; i++) {
-      let register = `R${i}`;
-      initialIntegerRegisterFile.push(
-        new IntegerRegisterFile(register, `${i}`, "0")
-      );
-    }
-    setIntegerRegisterFile(initialIntegerRegisterFile);
-
-    const initialMemory = [];
-    for (let i = 0; i < 200; i++) {
-      let address = i;
-      let value = integerToBinary(i);
-      initialMemory.push(new Memory(address, value));
-    }
-    setMemory(initialMemory);
-    //console.log(JSON.stringify(initialMemory));
-
-    const initialCache = [];
-    for (let i = 0; i < cacheSize; i++) initialCache.push(new Cache(i, -1));
-    setCache(initialCache);
-    //console.log(JSON.stringify(initialCache));
-  }, []);
+  }, [
+    mulBufferSize,
+    addBufferSize,
+    loadBufferSize,
+    storeBufferSize,
+    memSize,
+    cacheSize,
+  ]);
 
   useEffect(() => {
     //console.log(`fileContent: ${fileContent}`);
@@ -399,104 +431,130 @@ const App = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Buffer Status</h1>
-      {RenderTable("Branch Buffer", branchBuffer, [
-        "busy",
-        "op",
-        "vj",
-        "vk",
-        "qj",
-        "qk",
-        "a",
-      ])}
-      <div className="grid grid-cols-2 gap-4">
-        {RenderTable("Multiply Buffer", mulBuffer, [
-          "busy",
-          "op",
-          "vj",
-          "vk",
-          "qj",
-          "qk",
-          "a",
-        ])}
-        {RenderTable("Add Buffer", addBuffer, [
-          "busy",
-          "op",
-          "vj",
-          "vk",
-          "qj",
-          "qk",
-          "a",
-        ])}
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        {RenderTable("Load Buffer", loadBuffer, ["busy", "address"])}
-        {RenderTable("Store Buffer", storeBuffer, [
-          "busy",
-          "address",
-          "v",
-          "q",
-        ])}
-      </div>
-      {RenderTable("Summary", summary, [
-        "iteration",
-        "instruction",
-        "j",
-        "k",
-        "issue",
-        "executionComplete",
-        "writeBack",
-        "missMiss",
-      ])}
-      <div className="grid grid-cols-2 gap-4">
-        {RenderTable("FP Register File", registerFile, [
-          "register",
-          "value",
-          "qi",
-        ])}
-        {RenderTable("Integer Register File", integerRegisterFile, [
-          "register",
-          "value",
-          "qi",
-        ])}
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        {RenderTable("Cache", cache, ["address", "which", "value"])}
-        {RenderTable("Memory", memory, ["address", "value"])}
-      </div>
-
-      <div className="fixed top-0 w-full flex items-center justify-between p-4 bg-white shadow-lg z-50">
-        <button
-          onClick={handleOnNextClockCycleClick}
-          className="py-2 px-4 text-lg bg-purple-600 text-white font-semibold rounded-lg shadow-lg hover:bg-purple-700 transition duration-300"
-        >
-          Next Clockcycle
-        </button>
-
-        <span className="text-sm text-gray-600 mx-4">
-          <span>memMiss: {memMiss}</span> | <span>memHit: {memHit}</span> |{" "}
-          <span>addHit: {addHit}</span> | <span>subHit: {subHit}</span> |{" "}
-          <span>integerAddHit: {integerAddHit}</span> |{" "}
-          <span>integerSubHit: {integerSubHit}</span> |{" "}
-          <span>integerBranchHit: {integerBranchHit}</span> |{" "}
-          <span>mulHit: {mulHit}</span> | <span>divHit: {divHit}</span>
-        </span>
-
-        <span className="mr-16 text-xl font-semibold text-gray-800">
-          Current Clock Cycle:{" "}
-          <span className="text-purple-500">{GLOBAL_CLK}</span>
-        </span>
-      </div>
-
-      {isDone && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 shadow-lg w-96 text-center">
-            <h2 className="text-2xl font-bold text-green-600">Done!</h2>
-            <p className="text-gray-700 my-4">
-              All operations have been completed successfully.
-            </p>
+      {isUserFormSubmitted ? (
+        <>
+          <div className="py-20">
+            {RenderTable("Branch Buffer", branchBuffer, [
+              "busy",
+              "op",
+              "vj",
+              "vk",
+              "qj",
+              "qk",
+              "a",
+            ])}
+            <div className="grid grid-cols-2 gap-4">
+              {RenderTable("Multiply Buffer", mulBuffer, [
+                "busy",
+                "op",
+                "vj",
+                "vk",
+                "qj",
+                "qk",
+                "a",
+              ])}
+              {RenderTable("Add Buffer", addBuffer, [
+                "busy",
+                "op",
+                "vj",
+                "vk",
+                "qj",
+                "qk",
+                "a",
+              ])}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {RenderTable("Load Buffer", loadBuffer, ["busy", "address"])}
+              {RenderTable("Store Buffer", storeBuffer, [
+                "busy",
+                "address",
+                "v",
+                "q",
+              ])}
+            </div>
+            {RenderTable("Summary", summary, [
+              "iteration",
+              "instruction",
+              "j",
+              "k",
+              "issue",
+              "executionComplete",
+              "writeBack",
+              "missMiss",
+            ])}
+            <div className="grid grid-cols-2 gap-4">
+              {RenderTable("FP Register File", registerFile, [
+                "register",
+                "value",
+                "qi",
+              ])}
+              {RenderTable("Integer Register File", integerRegisterFile, [
+                "register",
+                "value",
+                "qi",
+              ])}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {RenderTable("Cache", cache, ["address", "which", "value"])}
+              {RenderTable("Memory", memory, ["address", "value"])}
+            </div>
           </div>
-        </div>
+
+          <div className="fixed top-0 w-full flex items-center justify-between p-4 bg-white shadow-lg z-50">
+            <button
+              onClick={handleOnNextClockCycleClick}
+              className="py-2 px-4 text-lg bg-purple-600 text-white font-semibold rounded-lg shadow-lg hover:bg-purple-700 transition duration-300"
+            >
+              Next Clockcycle
+            </button>
+            <div className="flex flex-col text-sm text-gray-600 mx-4 space-y-1">
+              <span className="text-sm text-gray-600 mx-4">
+                <span>memMiss: {memMiss}</span> | <span>memHit: {memHit}</span>{" "}
+                | <span>addHit: {addHit}</span> | <span>subHit: {subHit}</span>{" "}
+                | <span>integerAddHit: {integerAddHit}</span> |{" "}
+                <span>integerSubHit: {integerSubHit}</span> |{" "}
+                <span>integerBranchHit: {integerBranchHit}</span> |{" "}
+                <span>mulHit: {mulHit}</span> | <span>divHit: {divHit}</span>
+              </span>
+              <span>
+                <span>addBuffer size: {addBufferSize}</span> |{" "}
+                <span>mulBuffer size: {mulBufferSize}</span> |{" "}
+                <span>loadBuffer size: {loadBufferSize}</span> |{" "}
+                <span>storeBuffer size: {storeBufferSize}</span> |{" "}
+                <span>branchBuffer size: 1</span> |{" "}
+                <span>FP register size: 32</span> |{" "}
+                <span>integer register size: 32</span> |{" "}
+                <span>cache size: {cacheSize}</span> |{" "}
+                <span>memory size: {memSize}</span> |{" "}
+                <span>block size: {blockSize}</span>
+              </span>
+            </div>
+
+            <span className="mr-16 text-xl font-semibold text-gray-800">
+              Current Clock Cycle:{" "}
+              <span className="text-purple-500">{GLOBAL_CLK}</span>
+            </span>
+          </div>
+
+          {isDone && (
+            <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+              <div className="bg-white rounded-lg p-6 shadow-lg w-96 text-center">
+                <h2 className="text-2xl font-bold text-green-600">Done!</h2>
+                <p className="text-gray-700 my-4">
+                  All operations have been completed successfully.
+                </p>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <UserInput
+          setCacheSize={setCacheSize}
+          setMemorySize={setMemSize}
+          setMulBufferSize={setMulBufferSize}
+          setAddBufferSize={setAddBufferSize}
+          setRegisterFileSize={setRegisterFileSize}
+        />
       )}
     </div>
   );
