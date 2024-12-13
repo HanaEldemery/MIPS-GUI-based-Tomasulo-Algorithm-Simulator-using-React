@@ -413,7 +413,9 @@ const WritebackQuestion = (
       let startAdrString = splitData[2];
       let startAdr = parseInt(startAdrString);
       const indexInRegisterFileString = splitData[1];
-      const indexInRegisterFile = indexInRegisterFileString.substring(1);
+      const indexInRegisterFileToParse = indexInRegisterFileString.substring(1);
+      const indexInRegisterFile = parseInt(indexInRegisterFileToParse);
+      //const indexInRegisterFile = indexInRegisterFileString.substring(1);
       //const indexInRegisterFile = buffer[indexInBuffer].indexInRegisterFile;
       console.log(`indexInRegisterFile: ${indexInRegisterFile}`);
 
@@ -466,7 +468,7 @@ const WritebackQuestion = (
           load = false;
           break;
       }
-
+      console.log(load ? "true" : "false");
       //law load, hageeb el binary men el cache wahawelo decimal we hahoto fel register file
       let decToReg = -1;
       if (load) {
@@ -490,10 +492,12 @@ const WritebackQuestion = (
       if (!load) {
         let binToCache = decimalToBinary(decFromReg);
 
+        console.log("BIN TO CACHE: " + binToCache);
         //keep on concatenating 0' at the start of the binary string
         while (binToCache.length < 64) {
           binToCache = "0" + binToCache;
         }
+        console.log("BIN TO CACHE: " + binToCache);
 
         const chunkSize = 8;
         const chunks = [];
@@ -501,6 +505,8 @@ const WritebackQuestion = (
         for (let i = 0; i < binToCache.length; i += chunkSize) {
           chunks.push(binToCache.substring(i, i + chunkSize));
         }
+
+        console.log("CHUNKS: " + chunks);
 
         //store in the cache
         let chunkIndex = 7;
