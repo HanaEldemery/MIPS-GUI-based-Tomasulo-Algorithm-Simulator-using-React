@@ -615,16 +615,21 @@ const WritebackQuestion = (
             index === indexInBuffer ? new LoadBuffer() : record
           )
         );
-        setSummary((prevSummary) =>
-          updateSummary(prevSummary, indexInSummary, GLOBAL_CLK)
-        );
+        // setSummary((prevSummary) =>
+        //   updateSummary(prevSummary, indexInSummary, GLOBAL_CLK)
+        // );
       } else {
+        console.log("dakhalt hena lel store");
+        console.log(`indexInBuffer: ${indexInBuffer}`);
         setStoreBuffer((prevBuffer) =>
           prevBuffer.map((record, index) =>
             index === indexInBuffer ? new StoreBuffer() : record
           )
         );
       }
+      setSummary((prevSummary) =>
+        updateSummary(prevSummary, indexInSummary, GLOBAL_CLK)
+      );
       break;
     }
     case "B":
