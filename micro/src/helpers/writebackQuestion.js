@@ -28,7 +28,9 @@ function decimalToBinary(number) {
   if (typeof number !== "number" && typeof number !== "parseInt") {
     throw new Error("Input must be an integer or parseInt");
   }
-
+  if (number < 0) {
+    number = 0 - number;
+  }
   return number.toString(2);
 }
 const instructionToWriteBack = (
