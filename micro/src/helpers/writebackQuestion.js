@@ -274,84 +274,89 @@ const WritebackQuestion = (
           //    integerRegisterFile[parseInt(buffer[indexInBuffer]?.vj)]?.value
           //  }`
           //);
-          valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
+          //valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
           //console.log(`valueFirstRegister: ${valueFirstRegister}`);
           //console.log(
           //  `buffer[indexInBuffer]?.vk: ${buffer[indexInBuffer]?.vk}`
           //);
+          valueFirstRegister = BigInt(
+            integerRegisterFile[
+              parseInt(buffer[indexInBuffer]?.vj?.split("R")[1])
+            ]?.value
+          );
           valueImmediate = BigInt(buffer[indexInBuffer]?.vk);
           newValueNumber = valueFirstRegister + valueImmediate;
           //console.log(`newValue: ${newValue}`);
           break;
         case "DSUBI":
           toPutInBuffer = `R${indexInRegisterFile}`;
-          // valueFirstRegister = BigInt(
-          //   integerRegisterFile[
-          //     parseInt(buffer[indexInBuffer]?.vj?.split("R")[1])
-          //   ]?.value
-          // );
-          valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
+          valueFirstRegister = BigInt(
+            integerRegisterFile[
+              parseInt(buffer[indexInBuffer]?.vj?.split("R")[1])
+            ]?.value
+          );
+          //valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
           valueImmediate = BigInt(buffer[indexInBuffer]?.vk);
           newValueNumber = valueFirstRegister - valueImmediate;
           break;
         case "MUL.D":
         case "MUL.S":
           toPutInBuffer = `F${indexInRegisterFile}`;
-          // valueFirstRegister = parseInt(
-          //   registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
-          //     ?.value
-          // );
-          // valueSecondRegister = parseInt(
-          //   registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
-          //     ?.value
-          // );
-          valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
-          valueSecondRegister = BigInt(buffer[indexInBuffer]?.vk);
+          valueFirstRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
+              ?.value
+          );
+          valueSecondRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
+              ?.value
+          );
+          //valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
+          //valueSecondRegister = BigInt(buffer[indexInBuffer]?.vk);
           newValueNumber = valueFirstRegister * valueSecondRegister;
           break;
         case "DIV.D":
         case "DIV.S":
           toPutInBuffer = `F${indexInRegisterFile}`;
-          // valueFirstRegister = parseInt(
-          //   registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
-          //     ?.value
-          // );
-          // valueSecondRegister = parseInt(
-          //   registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
-          //     ?.value
-          // );
-          valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
-          valueSecondRegister = BigInt(buffer[indexInBuffer]?.vk);
+          valueFirstRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
+              ?.value
+          );
+          valueSecondRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
+              ?.value
+          );
+          //valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
+          //valueSecondRegister = BigInt(buffer[indexInBuffer]?.vk);
           newValueNumber = valueFirstRegister / valueSecondRegister;
           break;
         case "ADD.D":
         case "ADD.S":
           toPutInBuffer = `F${indexInRegisterFile}`;
-          // valueFirstRegister = parseInt(
-          //   registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
-          //     ?.value
-          // );
-          // valueSecondRegister = parseInt(
-          //   registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
-          //     ?.value
-          // );
-          valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
-          valueSecondRegister = BigInt(buffer[indexInBuffer]?.vk);
+          valueFirstRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
+              ?.value
+          );
+          valueSecondRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
+              ?.value
+          );
+          //valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
+          //valueSecondRegister = BigInt(buffer[indexInBuffer]?.vk);
           newValueNumber = valueFirstRegister + valueSecondRegister;
           break;
         case "SUB.D":
         case "SUB.S":
           toPutInBuffer = `F${indexInRegisterFile}`;
-          // valueFirstRegister = parseInt(
-          //   registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
-          //     ?.value
-          // );
-          // valueSecondRegister = parseInt(
-          //   registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
-          //     ?.value
-          // );
-          valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
-          valueSecondRegister = BigInt(buffer[indexInBuffer]?.vk);
+          valueFirstRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vj?.split("F")[1])]
+              ?.value
+          );
+          valueSecondRegister = parseInt(
+            registerFile[parseInt(buffer[indexInBuffer]?.vk?.split("F")[1])]
+              ?.value
+          );
+          //valueFirstRegister = BigInt(buffer[indexInBuffer]?.vj);
+          //valueSecondRegister = BigInt(buffer[indexInBuffer]?.vk);
           newValueNumber = valueFirstRegister - valueSecondRegister;
           break;
       }
@@ -359,6 +364,7 @@ const WritebackQuestion = (
       const newValue = `${newValueNumber}`;
       //console.log(`newValue: ${newValue}`);
       //console.log(`typeof newValue: ${typeof newValue}`);
+      //console.log(`toPutInBuffer: ${toPutInBuffer}`);
       setMulBuffer((prevBuffer) =>
         updateOperationBuffer(
           prevBuffer,
@@ -585,8 +591,12 @@ const WritebackQuestion = (
 
       let decToRegString = "" + decToReg;
       //update buffers that need the value returning from the load
+      let toPutInBuffer;
+      //console.log(`toPutInBuffer: ${toPutInBuffer}`);
+      console.log(`indexInRegisterFile: ${indexInRegisterFile}`);
       if (types[0] === "L") {
         if (types === "LD" || types === "LW") {
+          toPutInBuffer = `R${indexInRegisterFile}`;
           setIntegerRegisterFile((prevRegisterFile) =>
             updateRegisterFile(
               prevRegisterFile,
@@ -596,6 +606,7 @@ const WritebackQuestion = (
             )
           );
         } else {
+          toPutInBuffer = `F${indexInRegisterFile}`;
           setRegisterFile((prevRegisterFile) =>
             updateRegisterFile(
               prevRegisterFile,
@@ -609,7 +620,7 @@ const WritebackQuestion = (
           updateOperationBuffer(
             prevBuffer,
             instructionTag,
-            decToRegString,
+            /*decToRegString*/ toPutInBuffer,
             tagLetter === "M" ? indexInBuffer : null
           )
         );
@@ -617,7 +628,7 @@ const WritebackQuestion = (
           updateOperationBuffer(
             prevBuffer,
             instructionTag,
-            decToRegString,
+            /*decToRegString*/ toPutInBuffer,
             tagLetter === "A" ? indexInBuffer : null
           )
         );
@@ -625,14 +636,14 @@ const WritebackQuestion = (
           updateOperationBuffer(
             prevBuffer,
             instructionTag,
-            decToRegString,
+            /*decToRegString*/ toPutInBuffer,
             tagLetter === "B" ? indexInBuffer : null
           )
         );
         setStoreBuffer((prevBuffer) =>
           prevBuffer.map((record) =>
             record?.q === instructionTag?.tag
-              ? { ...record, v: decToReg, q: "" }
+              ? { ...record, v: /*decToRegString*/ toPutInBuffer, q: "" }
               : record
           )
         );
