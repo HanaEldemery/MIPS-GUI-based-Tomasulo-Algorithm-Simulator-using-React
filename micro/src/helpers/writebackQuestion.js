@@ -406,13 +406,16 @@ const WritebackQuestion = (
       const buffer = tagLetter === "L" ? loadBuffer : storeBuffer;
       //console.log(`instructionTag: ${JSON.stringify(instructionTag)}`);
       const indexInBuffer = parseInt(instructionTag?.tag.slice(1)) - 1;
-      //console.log(`indexInBuffer: ${indexInBuffer}`);
-      const indexInRegisterFile = buffer[indexInBuffer].indexInRegisterFile;
-      //console.log(`indexInRegisterFile: ${indexInRegisterFile}`);
+      console.log(`indexInBuffer: ${indexInBuffer}`);
       const indexInSummary = buffer[indexInBuffer]?.indexInSummary;
       const splitData = summary[indexInSummary]?.instruction?.split(" ");
       const types = splitData[0];
-      let startAdr = splitData[2];
+      let startAdrString = splitData[2];
+      let startAdr = parseInt(startAdrString);
+      const indexInRegisterFileString = splitData[1];
+      const indexInRegisterFile = indexInRegisterFileString.substring(1);
+      //const indexInRegisterFile = buffer[indexInBuffer].indexInRegisterFile;
+      console.log(`indexInRegisterFile: ${indexInRegisterFile}`);
 
       //console.log("type: " + types);
       //console.log("startAdr: " + startAdr);
@@ -430,10 +433,11 @@ const WritebackQuestion = (
         decFromRegPrev = registerFile[indexInRegisterFile]?.value;
       else decFromRegPrev = integerRegisterFile[indexInRegisterFile]?.value;
 
-      //console.log("decFromRegPrev: " + typeof decFromRegPrev);
+      console.log("ana fel " + types + " delwa2ty");
+      console.log("decFromRegPrev: " + decFromRegPrev);
 
       let decFromReg = BigInt(decFromRegPrev);
-      //console.log("decFromReg: " + decFromReg);
+      console.log("decFromReg: " + decFromReg);
 
       let stopAdr = -1;
       switch (types) {
@@ -450,6 +454,7 @@ const WritebackQuestion = (
           stopAdr = startAdr + 7;
           break;
       }
+      console.log("stopAdr: " + stopAdr);
       //FEL WRITE BACK
       //law hit haty el NEEDED data only men el cache, men el startAdr lehad el stopAdr fel which
       let load = true;
@@ -472,8 +477,11 @@ const WritebackQuestion = (
             startAdr++;
           }
         }
+        console.log("BIN FROM CACHE: " + binFromCache);
         decToReg = binaryToDecimal(binFromCache);
       }
+
+      console.log("DEC TO REG: " + decToReg);
 
       //law store hageeb el decimal men el register file wahawelo decimal we hahoto fel cache
       //let decFromReg = 650777868590383874n;
